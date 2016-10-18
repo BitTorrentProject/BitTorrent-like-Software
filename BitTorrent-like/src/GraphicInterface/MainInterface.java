@@ -18,6 +18,7 @@ public class MainInterface extends javax.swing.JFrame {
         initComponents();
         int i = 0;
         int t = 0;
+        int x = 12;
     }
 
     /**
