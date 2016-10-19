@@ -28,6 +28,8 @@ public class MainInterface extends javax.swing.JFrame {
         setTitle("BitTorrent");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         tfSearch.getParent().requestFocus();
+        int x = 0;
+        int y = 1;
     }
 
     /**
