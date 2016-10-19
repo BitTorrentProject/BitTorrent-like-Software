@@ -30,6 +30,7 @@ public class MainInterface extends javax.swing.JFrame {
         tfSearch.getParent().requestFocus();
         int x = 0;
         int y = 1;
+        int z=1;
     }
 
     /**
