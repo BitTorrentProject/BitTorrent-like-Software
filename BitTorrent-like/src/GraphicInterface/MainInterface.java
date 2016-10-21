@@ -64,11 +64,11 @@ public class MainInterface extends javax.swing.JFrame {
         jPanel1 = new javax.swing.JPanel();
         tfSearch = new javax.swing.JTextField();
         jScrollPane2 = new javax.swing.JScrollPane();
-        listResultFile = new javax.swing.JList<>();
+        listResultFile = new javax.swing.JList<String>();
         btnAddFile = new javax.swing.JButton();
         btnDeleteFile = new javax.swing.JButton();
         jScrollPane1 = new javax.swing.JScrollPane();
-        listProcessFile = new javax.swing.JList<>();
+        listProcessFile = new javax.swing.JList<String>();
         jLabel3 = new javax.swing.JLabel();
         jLabel4 = new javax.swing.JLabel();
         jSeparator1 = new javax.swing.JSeparator();
@@ -99,7 +99,7 @@ public class MainInterface extends javax.swing.JFrame {
         btnAddFile.setBackground(new java.awt.Color(0, 0, 255));
         btnAddFile.setFont(new java.awt.Font(".VnBook-AntiquaH", 1, 12)); // NOI18N
         btnAddFile.setForeground(new java.awt.Color(255, 255, 255));
-        btnAddFile.setText("Up File");
+        btnAddFile.setText("Upload");
         btnAddFile.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 btnAddFileActionPerformed(evt);
@@ -109,7 +109,8 @@ public class MainInterface extends javax.swing.JFrame {
         btnDeleteFile.setBackground(new java.awt.Color(255, 0, 0));
         btnDeleteFile.setFont(new java.awt.Font(".VnBook-AntiquaH", 1, 12)); // NOI18N
         btnDeleteFile.setForeground(new java.awt.Color(255, 255, 255));
-        btnDeleteFile.setText("Delete File");
+        btnDeleteFile.setText("Delete");
+        btnDeleteFile.setActionCommand("Delete");
         btnDeleteFile.setPreferredSize(new java.awt.Dimension(60, 20));
         btnDeleteFile.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
