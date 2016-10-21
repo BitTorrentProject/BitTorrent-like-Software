@@ -184,7 +184,6 @@
               <Color blue="ff" green="ff" red="ff" type="rgb"/>
             </Property>
             <Property name="text" type="java.lang.String" value="Delete"/>
-            <Property name="actionCommand" type="java.lang.String" value="Delete"/>
             <Property name="preferredSize" type="java.awt.Dimension" editor="org.netbeans.beaninfo.editors.DimensionEditor">
               <Dimension value="[60, 20]"/>
             </Property>
@@ -212,7 +211,7 @@
             <Property name="font" type="java.awt.Font" editor="org.netbeans.beaninfo.editors.FontEditor">
               <Font name="Tahoma" size="12" style="1"/>
             </Property>
-            <Property name="text" type="java.lang.String" value="K&#x1ebf;t qu&#x1ea3; t&#xec;m ki&#x1ebf;m"/>
+            <Property name="text" type="java.lang.String" value="Searching resul"/>
           </Properties>
         </Component>
         <Component class="javax.swing.JLabel" name="jLabel4">
@@ -223,7 +222,7 @@
             <Property name="font" type="java.awt.Font" editor="org.netbeans.beaninfo.editors.FontEditor">
               <Font name="Tahoma" size="12" style="1"/>
             </Property>
-            <Property name="text" type="java.lang.String" value="Danh s&#xe1;ch c&#xe1;c file &#x111;ang qu&#x1ea3;n l&#xfd;"/>
+            <Property name="text" type="java.lang.String" value="File list"/>
             <Property name="toolTipText" type="java.lang.String" value=""/>
           </Properties>
         </Component>

@@ -110,7 +110,6 @@ public class MainInterface extends javax.swing.JFrame {
         btnDeleteFile.setFont(new java.awt.Font(".VnBook-AntiquaH", 1, 12)); // NOI18N
         btnDeleteFile.setForeground(new java.awt.Color(255, 255, 255));
         btnDeleteFile.setText("Delete");
-        btnDeleteFile.setActionCommand("Delete");
         btnDeleteFile.setPreferredSize(new java.awt.Dimension(60, 20));
         btnDeleteFile.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -121,11 +120,11 @@ public class MainInterface extends javax.swing.JFrame {
         jScrollPane1.setViewportView(listProcessFile);
 
         jLabel3.setFont(new java.awt.Font("Tahoma", 1, 12)); // NOI18N
-        jLabel3.setText("Kết quả tìm kiếm");
+        jLabel3.setText("Searching resul");
 
         jLabel4.setBackground(new java.awt.Color(255, 255, 255));
         jLabel4.setFont(new java.awt.Font("Tahoma", 1, 12)); // NOI18N
-        jLabel4.setText("Danh sách các file đang quản lý");
+        jLabel4.setText("File list");
         jLabel4.setToolTipText("");
 
         javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
