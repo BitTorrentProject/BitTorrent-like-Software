@@ -1,6 +1,7 @@
 
 package GraphicInterface;
 
+import com.sun.glass.events.KeyEvent;
 import java.awt.Dimension;
 import java.awt.Graphics;
 import java.io.File;
@@ -24,7 +25,6 @@ public class MainInterface extends javax.swing.JFrame {
     DefaultListModel listModelResultFile=new DefaultListModel();
     DefaultListModel listModelProcessFile=new DefaultListModel();
     InetAddress addressIP;
-    String string="D:\\DA MMTNC\\BitTorrent-like-Software\\BitTorrent-like\\src\\GraphicInterface\\Icon\\Stock Index Up.png";
     
     
               
@@ -90,6 +90,11 @@ public class MainInterface extends javax.swing.JFrame {
         tfSearch.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 tfSearchActionPerformed(evt);
+            }
+        });
+        tfSearch.addKeyListener(new java.awt.event.KeyAdapter() {
+            public void keyPressed(java.awt.event.KeyEvent evt) {
+                tfSearchKeyPressed(evt);
             }
         });
 
@@ -240,11 +245,25 @@ public class MainInterface extends javax.swing.JFrame {
 
     private void btnDeleteFileActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnDeleteFileActionPerformed
         // TODO add your handling code here:
+        String fileName; // tên file sẽ xóa
         int pos=-1;
         pos=listProcessFile.getSelectedIndex();
         if(pos==-1)return;
+        fileName=listModelProcessFile.get(pos).toString();
         listModelProcessFile.remove(pos);
         listProcessFile.setModel(listModelProcessFile);
+        System.out.println(fileName);
+        File file = new File(fileName);
+//          kiem tra nếu file tồn tại thì xóa
+        if (file.exists()) {
+            System.out.println("file tồn tại");
+            file.delete();
+            System.out.println("xóa file thành công!");
+        } else {
+            System.out.println("file không tồn tại");
+            System.out.println("xóa không file thành công!");
+        }
+        
     }//GEN-LAST:event_btnDeleteFileActionPerformed
 
     private void tfSearchActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_tfSearchActionPerformed
@@ -255,6 +274,13 @@ public class MainInterface extends javax.swing.JFrame {
         // TODO add your handling code here:
         tfSearch.setText("");
     }//GEN-LAST:event_tfSearchMousePressed
+
+    private void tfSearchKeyPressed(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_tfSearchKeyPressed
+        if(evt.getKeyCode()==KeyEvent.VK_ENTER)
+        {
+            if(tfSearch.getText().equals("")) JOptionPane.showConfirmDialog(null, "Chưa nhập tên tìm kiếm");
+        }
+    }//GEN-LAST:event_tfSearchKeyPressed
 
     /**
      * @param args the command line arguments
