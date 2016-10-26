@@ -55,4 +55,8 @@ public class file {
     public String GetName(){
         return FileName;
     }
+    
+    public long GetSize() {
+        return this.size;
+    }
 }
