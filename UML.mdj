@@ -229,7 +229,7 @@
 											"height": 13,
 											"autoResize": false,
 											"underline": false,
-											"text": "-Files Vector<file>",
+											"text": "-Files Vector<UploadingFile>",
 											"horizontalAlignment": 0,
 											"verticalAlignment": 5
 										},
@@ -858,7 +858,7 @@
 											"height": 13,
 											"autoResize": false,
 											"underline": false,
-											"text": "file",
+											"text": "UploadingFile",
 											"horizontalAlignment": 2,
 											"verticalAlignment": 5
 										},
@@ -973,7 +973,7 @@
 											"height": 13,
 											"autoResize": false,
 											"underline": false,
-											"text": "-Chunks List<Chunk>",
+											"text": "-chunks List<Chunk>",
 											"horizontalAlignment": 0,
 											"verticalAlignment": 5
 										},
@@ -2824,6 +2824,7 @@
 							"visibility": "private",
 							"isStatic": false,
 							"isLeaf": false,
+							"type": "",
 							"isReadOnly": false,
 							"isOrdered": false,
 							"isUnique": false,
@@ -2837,7 +2838,7 @@
 							"_parent": {
 								"$ref": "AAAAAAFX6hvVAaEC9Y0="
 							},
-							"name": "Files Vector<file>",
+							"name": "Files Vector<UploadingFile>",
 							"visibility": "private",
 							"isStatic": false,
 							"isLeaf": false,
@@ -2896,7 +2897,7 @@
 					"_parent": {
 						"$ref": "AAAAAAFF+qBWK6M3Z8Y="
 					},
-					"name": "file",
+					"name": "UploadingFile",
 					"ownedElements": [
 						{
 							"_type": "UMLAssociation",
@@ -2952,11 +2953,10 @@
 							"_parent": {
 								"$ref": "AAAAAAFX6iNksKHYxYQ="
 							},
-							"name": "Chunks List<Chunk>",
+							"name": "chunks List<Chunk>",
 							"visibility": "private",
 							"isStatic": false,
 							"isLeaf": false,
-							"type": "",
 							"isReadOnly": false,
 							"isOrdered": false,
 							"isUnique": false,
@@ -2992,6 +2992,7 @@
 							"visibility": "private",
 							"isStatic": false,
 							"isLeaf": false,
+							"type": "",
 							"isReadOnly": false,
 							"isOrdered": false,
 							"isUnique": false,
@@ -3107,6 +3108,7 @@
 							"visibility": "private",
 							"isStatic": false,
 							"isLeaf": false,
+							"type": "",
 							"isReadOnly": false,
 							"isOrdered": false,
 							"isUnique": false,
@@ -3124,6 +3126,7 @@
 							"visibility": "private",
 							"isStatic": false,
 							"isLeaf": false,
+							"type": "",
 							"isReadOnly": false,
 							"isOrdered": false,
 							"isUnique": false,

@@ -19,7 +19,7 @@ import java.util.logging.Logger;
  */
 public class Machine {
     private String IPaddr;
-    private Vector<file> Files;
+    private Vector<UploadingFile> Files;
     private Vector<Machine> ConnectedMachines;
     
     public Machine() {
@@ -37,7 +37,7 @@ public class Machine {
         
         for (final File fileEntry : folder.listFiles()) {
             if (!fileEntry.isDirectory()) {
-                file UploadedFile = new file(fileEntry);
+                UploadingFile UploadedFile = new UploadingFile(fileEntry);
                 Files.addElement(UploadedFile);
                 System.out.println(UploadedFile.GetName());
             } else {
