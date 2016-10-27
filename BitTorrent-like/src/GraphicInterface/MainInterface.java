@@ -12,6 +12,7 @@ import javax.swing.JOptionPane;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import javax.swing.ImageIcon;
+import BusinessLogic.UploadingFile;
 
 /**
  *
@@ -240,6 +241,8 @@ public class MainInterface extends javax.swing.JFrame {
         
         
         listProcessFile.setModel(listModelProcessFile);
+        
+        UploadingFile upLoadingFile=new UploadingFile(file);
         
     }//GEN-LAST:event_btnAddFileActionPerformed
 
