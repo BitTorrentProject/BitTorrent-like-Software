@@ -32,7 +32,7 @@ public class Machine {
         IPaddr = addressIP.getHostAddress().toString();
         
         Files = new Vector<>();
-        
+        ConnectedMachines = new Vector<>();
         /*File folder = new File("BitTorrent");
         
         for (final File fileEntry : folder.listFiles()) {

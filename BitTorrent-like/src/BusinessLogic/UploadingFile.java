@@ -33,6 +33,7 @@ public class UploadingFile {
             size = f.length();
             FileName = f.getName();
             
+            // copying file to folder BitTorrent
             Path p = Paths.get(f.getAbsolutePath());
             try {
                 File BittorrentFile = new File("BitTorrent//" + f.getName());
@@ -47,6 +48,7 @@ public class UploadingFile {
                 Logger.getLogger(UploadingFile.class.getName()).log(Level.SEVERE, null, ex);
             }
             
+            // deviding file into chunks
             for (int i = 1; i < size/(1024*1024); i++) {
                 byte[] ChunkBytes = new byte[1024 * 1024];
                 int k = 0;
