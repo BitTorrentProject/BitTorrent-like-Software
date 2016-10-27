@@ -6,10 +6,14 @@
 package BusinessLogic;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.nio.channels.FileChannel;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
@@ -30,6 +34,12 @@ public class UploadingFile {
             FileName = f.getName();
             
             Path p = Paths.get(f.getAbsolutePath());
+            try {
+                File BittorrentFile = new File("BitTorrent//" + f.getName());
+                this.copyFileUsingChannel(f, BittorrentFile);
+            } catch (IOException ex) {
+                Logger.getLogger(UploadingFile.class.getName()).log(Level.SEVERE, null, ex);
+            }
             byte[] fileArray = null;
             try {
                fileArray = Files.readAllBytes(p);
@@ -58,5 +68,24 @@ public class UploadingFile {
     
     public long GetSize() {
         return this.size;
+    }
+    
+    public void copyFileUsingChannel(File source, File dest) throws IOException {
+      FileChannel sourceChannel = null;
+      FileChannel destChannel = null;
+      try {
+          sourceChannel = new FileInputStream(source).getChannel();
+          destChannel = new FileOutputStream(dest).getChannel();
+          destChannel.transferFrom(sourceChannel, 0, sourceChannel.size());
+         }finally{
+             sourceChannel.close();
+             destChannel.close();
+         }
+    }
+    
+    public static void main(String args[]){
+        File f = new File("D:\\Nhac\\Giao trinh Bolero Full.pdf");
+        UploadingFile file = new UploadingFile(f);
+        System.out.println("Finish running");
     }
 }
