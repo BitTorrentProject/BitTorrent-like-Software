@@ -54,6 +54,9 @@ public class Machine {
         this.Files.remove(index);
     }
     
+    public Vector<UploadingFile> GetFiles() {
+        return this.Files;
+    }
     public static void main(String args[]){
         Machine m = new Machine();
         System.out.println("Finish running");
