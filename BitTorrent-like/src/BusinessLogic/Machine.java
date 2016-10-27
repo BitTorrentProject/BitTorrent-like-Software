@@ -33,7 +33,7 @@ public class Machine {
         
         Files = new Vector<>();
         
-        File folder = new File("BitTorrent");
+        /*File folder = new File("BitTorrent");
         
         for (final File fileEntry : folder.listFiles()) {
             if (!fileEntry.isDirectory()) {
@@ -43,8 +43,17 @@ public class Machine {
             } else {
                 //System.out.println(fileEntry.getName());
             }
-        }
+        }*/
     }
+    
+    public void AddFile(UploadingFile file) {
+        this.Files.addElement(file);
+    }
+    
+    public void RemoveFileAt(int index){
+        this.Files.remove(index);
+    }
+    
     public static void main(String args[]){
         Machine m = new Machine();
         System.out.println("Finish running");

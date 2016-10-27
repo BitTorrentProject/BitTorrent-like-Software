@@ -1,6 +1,7 @@
 
 package GraphicInterface;
 
+import BusinessLogic.Machine;
 import com.sun.glass.events.KeyEvent;
 import java.awt.Dimension;
 import java.awt.Graphics;
@@ -26,7 +27,7 @@ public class MainInterface extends javax.swing.JFrame {
     DefaultListModel listModelResultFile=new DefaultListModel();
     DefaultListModel listModelProcessFile=new DefaultListModel();
     InetAddress addressIP;
-    
+    Machine m = new Machine();
     
               
     public MainInterface() {
@@ -241,9 +242,9 @@ public class MainInterface extends javax.swing.JFrame {
         
         
         listProcessFile.setModel(listModelProcessFile);
-        
+       
         UploadingFile upLoadingFile=new UploadingFile(file);
-        
+        m.AddFile(upLoadingFile);
     }//GEN-LAST:event_btnAddFileActionPerformed
 
     private void btnDeleteFileActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnDeleteFileActionPerformed
@@ -256,17 +257,18 @@ public class MainInterface extends javax.swing.JFrame {
         listModelProcessFile.remove(pos);
         listProcessFile.setModel(listModelProcessFile);
         System.out.println(fileName);
-        File file = new File(fileName);
+        File file = new File("BitTorrent//" + fileName);
 //          kiem tra nếu file tồn tại thì xóa
         if (file.exists()) {
             System.out.println("file tồn tại");
             file.delete();
+            m.RemoveFileAt(pos);
             System.out.println("xóa file thành công!");
         } else {
             System.out.println("file không tồn tại");
             System.out.println("xóa không file thành công!");
         }
-        
+          
     }//GEN-LAST:event_btnDeleteFileActionPerformed
 
     private void tfSearchActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_tfSearchActionPerformed
