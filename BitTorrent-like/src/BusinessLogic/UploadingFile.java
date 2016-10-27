@@ -28,7 +28,7 @@ public class UploadingFile {
     private String FileName;
     private long size;
     
-    public UploadingFile(File f) {
+    public UploadingFile(File f, int request) {
         if (f.exists() && f.isFile()) {
             size = f.length();
             FileName = f.getName();
@@ -36,8 +36,11 @@ public class UploadingFile {
             // copying file to folder BitTorrent
             Path p = Paths.get(f.getAbsolutePath());
             try {
-                File BittorrentFile = new File("BitTorrent//" + f.getName());
-                this.copyFileUsingChannel(f, BittorrentFile);
+                if(request == 1) {
+                    File BittorrentFile = new File("BitTorrent//" + f.getName());
+                    this.copyFileUsingChannel(f, BittorrentFile);
+                }
+                
             } catch (IOException ex) {
                 Logger.getLogger(UploadingFile.class.getName()).log(Level.SEVERE, null, ex);
             }
@@ -89,7 +92,7 @@ public class UploadingFile {
     
     public static void main(String args[]){
         File f = new File("D:\\Nhac\\Giao trinh Bolero Full.pdf");
-        UploadingFile file = new UploadingFile(f);
+        UploadingFile file = new UploadingFile(f,1);
         System.out.println("Finish running");
     }
 }

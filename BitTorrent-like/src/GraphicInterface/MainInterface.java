@@ -51,7 +51,7 @@ public class MainInterface extends javax.swing.JFrame {
         File folder = new File("BitTorrent");
         for (final File fileEntry : folder.listFiles()) {
             if (!fileEntry.isDirectory()) {
-                UploadingFile UploadedFile = new UploadingFile(fileEntry);
+                UploadingFile UploadedFile = new UploadingFile(fileEntry,0);
                 m.AddFile(UploadedFile);
                 
               
@@ -266,7 +266,7 @@ public class MainInterface extends javax.swing.JFrame {
         
         listProcessFile.setModel(listModelProcessFile);
        
-        UploadingFile upLoadingFile=new UploadingFile(file);
+        UploadingFile upLoadingFile=new UploadingFile(file,1);
         m.AddFile(upLoadingFile);
     }//GEN-LAST:event_btnAddFileActionPerformed
 
