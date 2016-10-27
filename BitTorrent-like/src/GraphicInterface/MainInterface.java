@@ -14,6 +14,9 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 import javax.swing.ImageIcon;
 import BusinessLogic.UploadingFile;
+import java.awt.event.InputEvent;
+import java.awt.event.MouseEvent;
+import java.io.IOException;
 
 /**
  *
@@ -104,6 +107,7 @@ public class MainInterface extends javax.swing.JFrame {
         jPanel1.setBorder(javax.swing.BorderFactory.createEtchedBorder());
 
         tfSearch.setText("Search");
+        tfSearch.setToolTipText("Nhập tên file tìm kiếm xong Enter");
         tfSearch.setBorder(javax.swing.BorderFactory.createEmptyBorder(1, 1, 1, 1));
         tfSearch.addMouseListener(new java.awt.event.MouseAdapter() {
             public void mousePressed(java.awt.event.MouseEvent evt) {
@@ -145,6 +149,11 @@ public class MainInterface extends javax.swing.JFrame {
             }
         });
 
+        listProcessFile.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                listProcessFileMouseClicked(evt);
+            }
+        });
         jScrollPane1.setViewportView(listProcessFile);
 
         jLabel3.setFont(new java.awt.Font("Tahoma", 1, 12)); // NOI18N
@@ -257,7 +266,7 @@ public class MainInterface extends javax.swing.JFrame {
         try {
             
             if(fileName!=null)
-                JOptionPane.showMessageDialog(null, "File Uploaded", "Message", JOptionPane.YES_OPTION);
+                JOptionPane.showMessageDialog(null, "File Uploaded", "Message", JOptionPane.INFORMATION_MESSAGE);
         } catch (Exception e) {
             JOptionPane.showMessageDialog(null, "Failed to upload", "Message", JOptionPane.ERROR_MESSAGE);
             return;
@@ -307,6 +316,24 @@ public class MainInterface extends javax.swing.JFrame {
             if(tfSearch.getText().equals("")) JOptionPane.showConfirmDialog(null, "Chưa nhập tên tìm kiếm");
         }
     }//GEN-LAST:event_tfSearchKeyPressed
+
+    private void listProcessFileMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_listProcessFileMouseClicked
+        // TODO add your handling code here:
+        if(evt.getClickCount()==2)
+        {
+            listProcessFile.getSelectedIndex();
+            int pos=-1;
+            pos=listProcessFile.getSelectedIndex();
+            if(pos==-1)return;
+            File file = new File("BitTorrent//" + listModelProcessFile.get(pos).toString());
+            try {
+                java.awt.Desktop.getDesktop().open(file);
+            }    
+            catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    }//GEN-LAST:event_listProcessFileMouseClicked
 
     /**
      * @param args the command line arguments
