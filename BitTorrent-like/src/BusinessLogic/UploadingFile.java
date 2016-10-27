@@ -44,38 +44,23 @@ public class UploadingFile {
             } catch (IOException ex) {
                 Logger.getLogger(UploadingFile.class.getName()).log(Level.SEVERE, null, ex);
             }
-            byte[] fileArray = null;
-            try {
-               fileArray = Files.readAllBytes(p);
-            } catch (IOException ex) {
-                Logger.getLogger(UploadingFile.class.getName()).log(Level.SEVERE, null, ex);
-            }
-            
-            // deviding file into chunks
-            for (int i = 1; i < size/(1024*1024); i++) {
-                byte[] ChunkBytes = new byte[1024 * 1024];
-                int k = 0;
-                for (int j = (int) ((i-1)*(Math.pow(1024, 2)+1)); j <= i*(Math.pow(1024, 2)+1); j++) {
-                    if (k < ChunkBytes.length) {
-                        ChunkBytes[k] = fileArray[j];
-                    }
-                    k++;
-                }
-                Chunk NewChunk = new Chunk(i,(int)size/(1024*1024), ChunkBytes);
-                chunks.add(NewChunk);
-            }
+            this.DevideFileIntoChunks(p);
         }
     }
     
+    //--------------------------Get methods--------------------
     public String GetName(){
         return FileName;
     }
-    
     public long GetSize() {
         return this.size;
     }
+    public List<Chunk> GetChunks() {
+        return this.chunks;
+    }
     
-    public void copyFileUsingChannel(File source, File dest) throws IOException {
+    //---------------------------File functions methods--------------------------
+    private void copyFileUsingChannel(File source, File dest) throws IOException {
       FileChannel sourceChannel = null;
       FileChannel destChannel = null;
       try {
@@ -88,6 +73,62 @@ public class UploadingFile {
              sourceChannel.close();
              destChannel.close();
          }
+    }
+    
+    
+    //------------------------File dividing method------------------------------
+    private void DevideFileIntoChunks(Path p) {
+        byte[] fileArray = null;
+        try {
+            fileArray = Files.readAllBytes(p);
+        } catch (IOException ex) {
+            Logger.getLogger(UploadingFile.class.getName()).log(Level.SEVERE, null, ex);
+        }
+
+        // deviding file into chunks
+        if (size % (1024 * 1024) == 0) {
+            for (int i = 1; i <= size / (1024 * 1024); i++) {
+                byte[] ChunkBytes = new byte[1024 * 1024];
+                int k = 0;
+                for (int j = (int) ((i - 1) * (Math.pow(1024, 2) + 1)); j <= i * (Math.pow(1024, 2) + 1) - 1; j++) {
+                    if (k < ChunkBytes.length) {
+                        ChunkBytes[k] = fileArray[j];
+                    }
+                    k++;
+                }
+                Chunk NewChunk = new Chunk(i, 1, ChunkBytes);
+                chunks.add(NewChunk);
+            }
+        } else {
+            int i = 1;
+            int j = 0;
+            for (i = 1; i <= size / (1024 * 1024); i++) {
+                byte[] ChunkBytes = new byte[1024 * 1024];
+                int k = 0;
+                for (j = (int) ((i - 1) * (Math.pow(1024, 2) + 1)); j <= i * (Math.pow(1024, 2) + 1) - 1; j++) {
+                    if (k < ChunkBytes.length) {
+                        ChunkBytes[k] = fileArray[j];
+                    }
+                    k++;
+                }
+                Chunk NewChunk = new Chunk(i, 1, ChunkBytes);
+                chunks.add(NewChunk);
+            }
+
+            // adding 1 byte left
+            double MByteLeft = size / (1024 * 1024) - (size % (1024 * 1024));
+            byte[] ChunkBytes = new byte[1024 * 1024];
+            int k = 0;
+            while (j < size) {
+                if (k < ChunkBytes.length) {
+                    ChunkBytes[k] = fileArray[j];
+                }
+                k++;
+                j++;
+            }
+            Chunk NewChunk = new Chunk(i, MByteLeft, ChunkBytes);
+            chunks.add(NewChunk);
+        }
     }
     
     public static void main(String args[]){

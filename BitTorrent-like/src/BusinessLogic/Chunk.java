@@ -12,10 +12,10 @@ package BusinessLogic;
 public class Chunk {
     private int ID;
     private Machine ContainingMachine;
-    private int size;
+    private double size;
     private byte[] data;
     
-    public Chunk(int PacketID, int Size, byte[] bytes){
+    public Chunk(int PacketID, double Size, byte[] bytes){
         ID = PacketID;
         size = Size;
         data = bytes.clone();

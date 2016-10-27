@@ -57,11 +57,9 @@ public class MainInterface extends javax.swing.JFrame {
             if (!fileEntry.isDirectory()) {
                 UploadingFile UploadedFile = new UploadingFile(fileEntry,0);
                 m.AddFile(UploadedFile);
-                
-              
                 listModelProcessFile.addElement(UploadedFile.GetName());
+                //listModelProcessFile.addElement(UploadedFile.GetName() + "-----------------size: " + UploadedFile.GetSize() + "-----------------no of chunks: " + UploadedFile.GetChunks().size());
                 listProcessFile.setModel(listModelProcessFile);
-
             } else {
                 JOptionPane.showMessageDialog(null, "Fail to Load Files From Local BitTorrent", "Erorr", JOptionPane.ERROR_MESSAGE);
                 return;
