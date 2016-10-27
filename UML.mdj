@@ -1801,7 +1801,7 @@
 											"height": 13,
 											"autoResize": false,
 											"underline": false,
-											"text": "-size <int>",
+											"text": "-size <double>",
 											"horizontalAlignment": 0,
 											"verticalAlignment": 5
 										}
@@ -2842,6 +2842,7 @@
 							"visibility": "private",
 							"isStatic": false,
 							"isLeaf": false,
+							"type": "",
 							"isReadOnly": false,
 							"isOrdered": false,
 							"isUnique": false,
@@ -2957,6 +2958,7 @@
 							"visibility": "private",
 							"isStatic": false,
 							"isLeaf": false,
+							"type": "",
 							"isReadOnly": false,
 							"isOrdered": false,
 							"isUnique": false,
@@ -3122,11 +3124,10 @@
 							"_parent": {
 								"$ref": "AAAAAAFX6iXhjqR4esE="
 							},
-							"name": "size <int>",
+							"name": "size <double>",
 							"visibility": "private",
 							"isStatic": false,
 							"isLeaf": false,
-							"type": "",
 							"isReadOnly": false,
 							"isOrdered": false,
 							"isUnique": false,
