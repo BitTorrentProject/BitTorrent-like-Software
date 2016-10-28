@@ -20,4 +20,10 @@ public class Chunk {
         size = Size;
         data = bytes.clone();
     }
+    public int getID() {
+        return ID;
+    }
+    public double GetSize(){
+        return size;
+    }
 }
