@@ -5,10 +5,13 @@
  */
 package BusinessLogic;
 
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.FileWriter;
 import java.io.IOException;
+import java.io.OutputStreamWriter;
 import java.nio.channels.FileChannel;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -39,11 +42,12 @@ public class UploadingFile {
                 if(request == 1) {
                     File BittorrentFile = new File("BitTorrent//" + f.getName());
                     this.copyFileUsingChannel(f, BittorrentFile);
-                }
-                
+                }    
             } catch (IOException ex) {
                 Logger.getLogger(UploadingFile.class.getName()).log(Level.SEVERE, null, ex);
             }
+            
+            // devide file into chunks
             this.DevideFileIntoChunks(p);
         }
     }
@@ -73,9 +77,8 @@ public class UploadingFile {
              sourceChannel.close();
              destChannel.close();
          }
-    }
-    
-    
+    }   
+   
     //------------------------File dividing method------------------------------
     private void DevideFileIntoChunks(Path p) {
         byte[] fileArray = null;
@@ -116,7 +119,7 @@ public class UploadingFile {
             }
 
             // adding 1 byte left
-            double MByteLeft = size / (1024 * 1024) - (size % (1024 * 1024));
+            double MByteLeft = ((double)(size)/ (1024 * 1024)) - (int)(size / (1024 * 1024));
             byte[] ChunkBytes = new byte[1024 * 1024];
             int k = 0;
             while (j < size) {
@@ -131,9 +134,40 @@ public class UploadingFile {
         }
     }
     
+    public void WriteFileInfoToTorrent() throws IOException{
+        File file = new File("BitTorrent//" + this.FileName + ".torrent");
+        FileOutputStream fos = new FileOutputStream(file);
+ 
+	BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(fos));
+        bw.write(FileName + "-----------Size: " + this.size/(1024*1024) + "MB \n");
+        bw.newLine();
+        for (int i = 0; i < this.chunks.size(); i++){
+            Chunk chunk = this.chunks.get(i);
+            bw.write("++ chunk : " + chunk.getID() + "\n");
+            bw.newLine();
+            String n = String.format("%.10f", chunk.GetSize());
+            bw.write("++ size: " + n + "\n");   
+            bw.newLine();
+        }
+        
+        bw.flush();
+        bw.close();
+    }
+    
     public static void main(String args[]){
-        File f = new File("D:\\Nhac\\Giao trinh Bolero Full.pdf");
-        UploadingFile file = new UploadingFile(f,1);
-        System.out.println("Finish running");
+        //File f = new File("D:\\Nhac\\Giao trinh Bolero Full.pdf");
+        //UploadingFile file = new UploadingFile(f,1);
+        //System.out.println("Finish running");
+        
+        long size = 11688251;
+        double a = ((double)(size)/ (1024 * 1024));
+        String a1 = String.format("%.10f", a);
+        System.out.println(a1);
+        int b = (int)(size / (1024 * 1024));
+        System.out.println(b);
+        
+        double MByteLeft = a - b;
+        String n = String.format("%.10f", MByteLeft);
+        System.out.print(n);
     }
 }

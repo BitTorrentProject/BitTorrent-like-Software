@@ -18,13 +18,14 @@ import java.awt.Color;
 import java.awt.event.InputEvent;
 import java.awt.event.MouseEvent;
 import java.io.IOException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  *
  * @author admin
  */
 public class MainInterface extends javax.swing.JFrame {
-
     /**
      * Creates new form MainInterface
      */
@@ -32,8 +33,7 @@ public class MainInterface extends javax.swing.JFrame {
     DefaultListModel listModelProcessFile=new DefaultListModel();
     InetAddress addressIP;
     Machine m = new Machine();
-    
-              
+       
     public MainInterface() {
         initComponents();
         setVisible(true);
@@ -55,11 +55,22 @@ public class MainInterface extends javax.swing.JFrame {
         File folder = new File("BitTorrent");
         for (final File fileEntry : folder.listFiles()) {
             if (!fileEntry.isDirectory()) {
-                UploadingFile UploadedFile = new UploadingFile(fileEntry,0);
-                m.AddFile(UploadedFile);
-                listModelProcessFile.addElement(UploadedFile.GetName());
-                //listModelProcessFile.addElement(UploadedFile.GetName() + "-----------------size: " + UploadedFile.GetSize() + "-----------------no of chunks: " + UploadedFile.GetChunks().size());
-                listProcessFile.setModel(listModelProcessFile);
+                // if the file does not contain extension .torrent
+                if (!fileEntry.getName().endsWith(".torrent")) {
+                    UploadingFile UploadedFile = new UploadingFile(fileEntry,0);
+                    m.AddFile(UploadedFile);
+                    listModelProcessFile.addElement(UploadedFile.GetName());
+                    //listModelProcessFile.addElement(UploadedFile.GetName() + "-----------------size: " + UploadedFile.GetSize() + "-----------------no of chunks: " + UploadedFile.GetChunks().size());
+                    listProcessFile.setModel(listModelProcessFile);
+                    
+                    // write file info into file.torrent
+                    try {
+                        UploadedFile.WriteFileInfoToTorrent();
+                    } catch (IOException ex) {
+                        String[] Name = UploadedFile.GetName().split(".");
+                        JOptionPane.showMessageDialog(null, Name[0], "Erorr", JOptionPane.ERROR_MESSAGE);
+                    }
+                }
             } else {
                 JOptionPane.showMessageDialog(null, "Fail to Load Files From Local BitTorrent", "Erorr", JOptionPane.ERROR_MESSAGE);
                 return;
@@ -71,7 +82,6 @@ public class MainInterface extends javax.swing.JFrame {
         try
         {
             addressIP = InetAddress.getLocalHost();
-            
         }
     catch(Exception e)
         {
@@ -281,7 +291,6 @@ public class MainInterface extends javax.swing.JFrame {
         File file=chooser.getSelectedFile();
         String fileName=file.getName();
         try {
-            
             if(fileName!=null)
                 JOptionPane.showMessageDialog(null, "File Uploaded", "Message", JOptionPane.INFORMATION_MESSAGE);
         } catch (Exception e) {
@@ -294,6 +303,13 @@ public class MainInterface extends javax.swing.JFrame {
        
         UploadingFile upLoadingFile=new UploadingFile(file,1);
         m.AddFile(upLoadingFile);
+        
+        // write file info into file.torrent
+        try {
+            upLoadingFile.WriteFileInfoToTorrent();
+        } catch (IOException ex) {
+            Logger.getLogger(MainInterface.class.getName()).log(Level.SEVERE, null, ex);
+        }
     }//GEN-LAST:event_btnAddFileActionPerformed
 
     private void btnDeleteFileActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnDeleteFileActionPerformed
@@ -307,9 +323,11 @@ public class MainInterface extends javax.swing.JFrame {
         listProcessFile.setModel(listModelProcessFile);
         System.out.println(fileName);
         File file = new File("BitTorrent//" + fileName);
-//          kiem tra nếu file tồn tại thì xóa
+        File fileTorrrent = new File("BitTorrent//" + fileName + ".torrent");
+        // kiem tra nếu file tồn tại thì xóa
         if (file.exists()) {
             file.delete();
+            fileTorrrent.delete();
             m.RemoveFileAt(pos);
             JOptionPane.showMessageDialog(null, "File Deleted", "Message", JOptionPane.YES_OPTION);
         } else {
