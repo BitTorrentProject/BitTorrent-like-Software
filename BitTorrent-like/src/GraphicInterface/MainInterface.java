@@ -15,16 +15,26 @@ import java.net.UnknownHostException;
 import javax.swing.ImageIcon;
 import BusinessLogic.UploadingFile;
 import java.awt.Color;
+import java.awt.event.ActionEvent;
 import java.awt.event.InputEvent;
 import java.awt.event.MouseEvent;
 import java.io.IOException;
+
+import javax.swing.JMenu;
+import javax.swing.JMenuItem;
+import javax.swing.JPopupMenu;
+import java.awt.event.ActionListener;
+import java.awt.event.MouseListener;
+
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
 
 /**
  *
  * @author admin
  */
 public class MainInterface extends javax.swing.JFrame {
-
     /**
      * Creates new form MainInterface
      */
@@ -32,10 +42,18 @@ public class MainInterface extends javax.swing.JFrame {
     DefaultListModel listModelProcessFile=new DefaultListModel();
     InetAddress addressIP;
     Machine m = new Machine();
+
+    JPopupMenu puMenu=new JPopupMenu();
+    JMenuItem miOpen=new JMenuItem("Open");
+    JMenuItem miDelete=new JMenuItem("Delete");
+    JMenuItem miOpenLocation=new JMenuItem("Open Location");
+ 
     
               
+
     public MainInterface() {
         initComponents();
+        initPopupMenu();
         setVisible(true);
         setLocation(500, 200);
         setTitle("BitTorrent");
@@ -43,8 +61,18 @@ public class MainInterface extends javax.swing.JFrame {
         tfSearch.getParent().requestFocus();
         tfYourIP.setText(getIP());
         this.loadFilesFromLocalBitTorrent();
+           listProcessFile.setComponentPopupMenu(puMenu);
     }
-
+    public void initPopupMenu()
+    {
+        
+        puMenu.add(miOpen);
+        puMenu.add(miDelete);
+        puMenu.add(miOpenLocation);
+        //miOpen.addActionListener(this);
+        //miDelete.addActionListener(this);
+        //miOpenLocation.addActionListener(this);
+    }
     /**
      * This method is called from within the constructor to initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is always
@@ -55,11 +83,22 @@ public class MainInterface extends javax.swing.JFrame {
         File folder = new File("BitTorrent");
         for (final File fileEntry : folder.listFiles()) {
             if (!fileEntry.isDirectory()) {
-                UploadingFile UploadedFile = new UploadingFile(fileEntry,0);
-                m.AddFile(UploadedFile);
-                listModelProcessFile.addElement(UploadedFile.GetName());
-                //listModelProcessFile.addElement(UploadedFile.GetName() + "-----------------size: " + UploadedFile.GetSize() + "-----------------no of chunks: " + UploadedFile.GetChunks().size());
-                listProcessFile.setModel(listModelProcessFile);
+                // if the file does not contain extension .torrent
+                if (!fileEntry.getName().endsWith(".torrent")) {
+                    UploadingFile UploadedFile = new UploadingFile(fileEntry,0);
+                    m.AddFile(UploadedFile);
+                    listModelProcessFile.addElement(UploadedFile.GetName());
+                    //listModelProcessFile.addElement(UploadedFile.GetName() + "-----------------size: " + UploadedFile.GetSize() + "-----------------no of chunks: " + UploadedFile.GetChunks().size());
+                    listProcessFile.setModel(listModelProcessFile);
+                    
+                    // write file info into file.torrent
+                    try {
+                        UploadedFile.WriteFileInfoToTorrent();
+                    } catch (IOException ex) {
+                        String[] Name = UploadedFile.GetName().split(".");
+                        JOptionPane.showMessageDialog(null, Name[0], "Erorr", JOptionPane.ERROR_MESSAGE);
+                    }
+                }
             } else {
                 JOptionPane.showMessageDialog(null, "Fail to Load Files From Local BitTorrent", "Erorr", JOptionPane.ERROR_MESSAGE);
                 return;
@@ -71,7 +110,6 @@ public class MainInterface extends javax.swing.JFrame {
         try
         {
             addressIP = InetAddress.getLocalHost();
-            
         }
     catch(Exception e)
         {
@@ -84,6 +122,7 @@ public class MainInterface extends javax.swing.JFrame {
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
+        puMenu1 = new javax.swing.JPopupMenu();
         jPanel1 = new javax.swing.JPanel();
         tfSearch = new javax.swing.JTextField();
         jScrollPane2 = new javax.swing.JScrollPane();
@@ -281,7 +320,6 @@ public class MainInterface extends javax.swing.JFrame {
         File file=chooser.getSelectedFile();
         String fileName=file.getName();
         try {
-            
             if(fileName!=null)
                 JOptionPane.showMessageDialog(null, "File Uploaded", "Message", JOptionPane.INFORMATION_MESSAGE);
         } catch (Exception e) {
@@ -294,6 +332,13 @@ public class MainInterface extends javax.swing.JFrame {
        
         UploadingFile upLoadingFile=new UploadingFile(file,1);
         m.AddFile(upLoadingFile);
+        
+        // write file info into file.torrent
+        try {
+            upLoadingFile.WriteFileInfoToTorrent();
+        } catch (IOException ex) {
+            Logger.getLogger(MainInterface.class.getName()).log(Level.SEVERE, null, ex);
+        }
     }//GEN-LAST:event_btnAddFileActionPerformed
 
     private void btnDeleteFileActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnDeleteFileActionPerformed
@@ -305,11 +350,12 @@ public class MainInterface extends javax.swing.JFrame {
         fileName=listModelProcessFile.get(pos).toString();
         listModelProcessFile.remove(pos);
         listProcessFile.setModel(listModelProcessFile);
-        System.out.println(fileName);
         File file = new File("BitTorrent//" + fileName);
-//          kiem tra nếu file tồn tại thì xóa
+        File fileTorrrent = new File("BitTorrent//" + fileName + ".torrent");
+        // kiem tra nếu file tồn tại thì xóa
         if (file.exists()) {
             file.delete();
+            fileTorrrent.delete();
             m.RemoveFileAt(pos);
             JOptionPane.showMessageDialog(null, "File Deleted", "Message", JOptionPane.YES_OPTION);
         } else {
@@ -336,8 +382,10 @@ public class MainInterface extends javax.swing.JFrame {
 
     private void listProcessFileMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_listProcessFileMouseClicked
         // TODO add your handling code here:
-        if(evt.getClickCount()==2)
-        {
+       if(evt.getModifiers()==MouseEvent.BUTTON1_MASK)
+       {
+            if(evt.getClickCount()==2)
+            {
             listProcessFile.getSelectedIndex();
             int pos=-1;
             pos=listProcessFile.getSelectedIndex();
@@ -349,9 +397,21 @@ public class MainInterface extends javax.swing.JFrame {
             catch (IOException e) {
                 e.printStackTrace();
             }
+            }
+       }
+       if(evt.getModifiers()==MouseEvent.BUTTON3_MASK)
+        {
+            puMenu.setVisible(true);
+            //System.out.println("vị trí"+pos);
+            //if((JMenuItem)evt.getSource()==miOpen)System.out.println("bạn chọn open");
         }
+       
     }//GEN-LAST:event_listProcessFileMouseClicked
 
+     public void actionPerform(ActionEvent e)
+     {
+         if((JMenuItem)e.getSource()==miOpen)System.out.println("bạn chọn open");
+     }
     private void jLabel5MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jLabel5MouseClicked
         // TODO add your handling code here:
          File file = new File("BitTorrent");
@@ -423,6 +483,7 @@ public class MainInterface extends javax.swing.JFrame {
     private javax.swing.JSeparator jSeparator1;
     private javax.swing.JList<String> listProcessFile;
     private javax.swing.JList<String> listResultFile;
+    private javax.swing.JPopupMenu puMenu1;
     private javax.swing.JTextField tfSearch;
     private javax.swing.JLabel tfYourIP;
     // End of variables declaration//GEN-END:variables
