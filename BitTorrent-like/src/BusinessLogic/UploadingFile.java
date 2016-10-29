@@ -27,8 +27,9 @@ import java.util.logging.Logger;
  * @author admin
  */
 public class UploadingFile {
-    private List<Chunk> chunks = new ArrayList();;
     private String FileName;
+    private List<Chunk> chunks = new ArrayList();;
+    
     private long size;
     
     public UploadingFile(File f, int request) {
