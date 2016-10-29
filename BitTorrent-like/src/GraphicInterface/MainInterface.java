@@ -382,30 +382,28 @@ public class MainInterface extends javax.swing.JFrame {
 
     private void listProcessFileMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_listProcessFileMouseClicked
         // TODO add your handling code here:
-       if(evt.getModifiers()==MouseEvent.BUTTON1_MASK)
-       {
-            if(evt.getClickCount()==2)
-            {
-            listProcessFile.getSelectedIndex();
-            int pos=-1;
-            pos=listProcessFile.getSelectedIndex();
-            if(pos==-1)return;
-            File file = new File("BitTorrent//" + listModelProcessFile.get(pos).toString());
-            try {
-                java.awt.Desktop.getDesktop().open(file);
-            }    
-            catch (IOException e) {
-                e.printStackTrace();
+        if (evt.getModifiers() == MouseEvent.BUTTON1_MASK) {
+            if (evt.getClickCount() == 2) {
+                listProcessFile.getSelectedIndex();
+                int pos = -1;
+                pos = listProcessFile.getSelectedIndex();
+                if (pos == -1) {
+                    return;
+                }
+                File file = new File("BitTorrent//" + listModelProcessFile.get(pos).toString());
+                try {
+                    java.awt.Desktop.getDesktop().open(file);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
             }
-            }
-       }
-       if(evt.getModifiers()==MouseEvent.BUTTON3_MASK)
-        {
+        }
+        if (evt.getModifiers() == MouseEvent.BUTTON3_MASK) {
             puMenu.setVisible(true);
             //System.out.println("vị trí"+pos);
             //if((JMenuItem)evt.getSource()==miOpen)System.out.println("bạn chọn open");
         }
-       
+
     }//GEN-LAST:event_listProcessFileMouseClicked
 
      public void actionPerform(ActionEvent e)
