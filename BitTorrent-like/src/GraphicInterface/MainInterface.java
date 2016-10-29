@@ -191,7 +191,7 @@ public class MainInterface extends javax.swing.JFrame implements ActionListener{
         jLabel3.setText("Searching result");
 
         jLabel5.setFont(new java.awt.Font("Tahoma", 1, 14)); // NOI18N
-        jLabel5.setText("Open Foder Download");
+        jLabel5.setText("Downloads");
         jLabel5.addMouseListener(new java.awt.event.MouseAdapter() {
             public void mouseClicked(java.awt.event.MouseEvent evt) {
                 jLabel5MouseClicked(evt);
