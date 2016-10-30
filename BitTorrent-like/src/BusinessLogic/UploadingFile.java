@@ -144,7 +144,7 @@ public class UploadingFile {
             Chunk chunk = this.chunks.get(i);
             bw.write("++ chunk : " + chunk.getID() + "\n");
             bw.newLine();
-            String n = String.format("%.10f", chunk.GetSize());
+            String n = String.format("%.10f", chunk.getSize());
             bw.write("++ size: " + n + "\n");   
             bw.newLine();
         }
