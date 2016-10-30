@@ -1,6 +1,4 @@
-
 package GraphicInterface;
-
 import BusinessLogic.Machine;
 import com.sun.glass.events.KeyEvent;
 import java.awt.Dimension;
@@ -15,6 +13,7 @@ import java.net.UnknownHostException;
 import javax.swing.ImageIcon;
 import BusinessLogic.UploadingFile;
 import java.awt.Color;
+import java.awt.Image;
 import java.awt.event.ActionEvent;
 import java.awt.event.InputEvent;
 import java.awt.event.MouseEvent;
@@ -28,6 +27,7 @@ import java.awt.event.MouseListener;
 
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.swing.Icon;
 import javax.swing.table.DefaultTableModel;
 
 
@@ -40,10 +40,11 @@ public class MainInterface extends javax.swing.JFrame implements ActionListener{
      * Creates new form MainInterface
      */
     DefaultListModel listModelResultFile=new DefaultListModel();
-   // DefaultListModel listModelProcessFile=new DefaultListModel();
-    Object[] column={"FileName","Size","Status"};
-    DefaultTableModel tableModelFileList=new DefaultTableModel(column, 0);
-    //DefaultTableModel tableModelProcessFile=new DefaultTableModel();
+    Object[] columnFileList={"FileName","Size","Status"};
+    DefaultTableModel tableModelFileList=new DefaultTableModel(columnFileList, 0);
+    
+    Object[] columnDownloadProcess={"FileName","Size","Process"};
+    DefaultTableModel tableModelDownloadProcess=new DefaultTableModel(columnDownloadProcess,0);
     
     InetAddress addressIP;
     String pathChooser="";
@@ -66,8 +67,11 @@ public class MainInterface extends javax.swing.JFrame implements ActionListener{
         lYourHostName.setText("Your Host Name: "+getYourHostName());
         this.loadFilesFromLocalBitTorrent();
         setResizable(false);
-       
+       //ImageIcon iconUpFile=new ImageIcon("\\src\\Image\\upFile.png");
+       // btnUpFile.setIcon(new javax.swing.ImageIcon(getClass().getResource("/Image/upFile.png")));
+       btnUpFile.setIcon(new ImageIcon(new ImageIcon("/Image/upFile.png").getImage().getScaledInstance(40, 10, Image.SCALE_DEFAULT)));
         tableFileList.setComponentPopupMenu(puMenu);
+        
     }
     public void initPopupMenu()
     {
@@ -144,10 +148,10 @@ public class MainInterface extends javax.swing.JFrame implements ActionListener{
         puMenu1 = new javax.swing.JPopupMenu();
         jPanel1 = new javax.swing.JPanel();
         tfSearch = new javax.swing.JTextField();
-        jScrollPane2 = new javax.swing.JScrollPane();
-        listResultFile = new javax.swing.JList<String>();
-        jLabel3 = new javax.swing.JLabel();
         jLabel5 = new javax.swing.JLabel();
+        jScrollPane4 = new javax.swing.JScrollPane();
+        tableDownloadProcess = new javax.swing.JTable();
+        jLabel1 = new javax.swing.JLabel();
         jPanel2 = new javax.swing.JPanel();
         jLabel6 = new javax.swing.JLabel();
         jScrollPane3 = new javax.swing.JScrollPane();
@@ -156,7 +160,7 @@ public class MainInterface extends javax.swing.JFrame implements ActionListener{
         lYourHostName = new javax.swing.JLabel();
         jPanel3 = new javax.swing.JPanel();
         jLabel4 = new javax.swing.JLabel();
-        btnAddFile = new javax.swing.JButton();
+        btnUpFile = new javax.swing.JButton();
         btnDeleteFile = new javax.swing.JButton();
         jScrollPane1 = new javax.swing.JScrollPane();
         tableFileList = new javax.swing.JTable();
@@ -184,12 +188,6 @@ public class MainInterface extends javax.swing.JFrame implements ActionListener{
             }
         });
 
-        listResultFile.setToolTipText("Kết quả tìm kiếm");
-        jScrollPane2.setViewportView(listResultFile);
-
-        jLabel3.setFont(new java.awt.Font("Tahoma", 1, 12)); // NOI18N
-        jLabel3.setText("Searching result");
-
         jLabel5.setFont(new java.awt.Font("Tahoma", 1, 14)); // NOI18N
         jLabel5.setText("Downloads");
         jLabel5.addMouseListener(new java.awt.event.MouseAdapter() {
@@ -204,23 +202,43 @@ public class MainInterface extends javax.swing.JFrame implements ActionListener{
             }
         });
 
+        tableDownloadProcess.setModel(new javax.swing.table.DefaultTableModel(
+            new Object [][] {
+
+            },
+            new String [] {
+                "File", "Size", "Process"
+            }
+        ) {
+            boolean[] canEdit = new boolean [] {
+                false, false, false
+            };
+
+            public boolean isCellEditable(int rowIndex, int columnIndex) {
+                return canEdit [columnIndex];
+            }
+        });
+        jScrollPane4.setViewportView(tableDownloadProcess);
+
+        jLabel1.setFont(new java.awt.Font("Tahoma", 1, 11)); // NOI18N
+        jLabel1.setText("Download Process");
+
         javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
         jPanel1.setLayout(jPanel1Layout);
         jPanel1Layout.setHorizontalGroup(
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel1Layout.createSequentialGroup()
-                .addGap(30, 30, 30)
-                .addComponent(jLabel3)
-                .addGap(0, 0, Short.MAX_VALUE))
-            .addGroup(jPanel1Layout.createSequentialGroup()
                 .addContainerGap()
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jScrollPane2)
+                    .addComponent(jScrollPane4)
                     .addGroup(jPanel1Layout.createSequentialGroup()
-                        .addComponent(tfSearch, javax.swing.GroupLayout.PREFERRED_SIZE, 250, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                        .addComponent(jLabel5, javax.swing.GroupLayout.PREFERRED_SIZE, 164, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addGap(0, 26, Short.MAX_VALUE)))
+                        .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addGroup(jPanel1Layout.createSequentialGroup()
+                                .addComponent(tfSearch, javax.swing.GroupLayout.PREFERRED_SIZE, 250, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                                .addComponent(jLabel5, javax.swing.GroupLayout.PREFERRED_SIZE, 164, javax.swing.GroupLayout.PREFERRED_SIZE))
+                            .addComponent(jLabel1))
+                        .addGap(0, 0, Short.MAX_VALUE)))
                 .addContainerGap())
         );
         jPanel1Layout.setVerticalGroup(
@@ -230,11 +248,11 @@ public class MainInterface extends javax.swing.JFrame implements ActionListener{
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addComponent(tfSearch, javax.swing.GroupLayout.PREFERRED_SIZE, 30, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(jLabel5, javax.swing.GroupLayout.PREFERRED_SIZE, 30, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jLabel3)
-                .addGap(10, 10, 10)
-                .addComponent(jScrollPane2, javax.swing.GroupLayout.PREFERRED_SIZE, 367, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addGap(18, 18, 18)
+                .addComponent(jLabel1)
+                .addGap(18, 18, 18)
+                .addComponent(jScrollPane4, javax.swing.GroupLayout.PREFERRED_SIZE, 243, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addContainerGap(122, Short.MAX_VALUE))
         );
 
         jPanel2.setBorder(javax.swing.BorderFactory.createEtchedBorder());
@@ -305,13 +323,11 @@ public class MainInterface extends javax.swing.JFrame implements ActionListener{
         jLabel4.setText("File list");
         jLabel4.setToolTipText("");
 
-        btnAddFile.setBackground(new java.awt.Color(0, 0, 255));
-        btnAddFile.setFont(new java.awt.Font(".VnBook-AntiquaH", 1, 12)); // NOI18N
-        btnAddFile.setForeground(new java.awt.Color(255, 255, 255));
-        btnAddFile.setText("Upload");
-        btnAddFile.addActionListener(new java.awt.event.ActionListener() {
+        btnUpFile.setFont(new java.awt.Font(".VnBook-AntiquaH", 1, 12)); // NOI18N
+        btnUpFile.setForeground(new java.awt.Color(255, 255, 255));
+        btnUpFile.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                btnAddFileActionPerformed(evt);
+                btnUpFileActionPerformed(evt);
             }
         });
 
@@ -350,7 +366,7 @@ public class MainInterface extends javax.swing.JFrame implements ActionListener{
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
             .addGroup(jPanel3Layout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(btnAddFile, javax.swing.GroupLayout.PREFERRED_SIZE, 120, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addComponent(btnUpFile, javax.swing.GroupLayout.PREFERRED_SIZE, 152, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                 .addComponent(btnDeleteFile, javax.swing.GroupLayout.PREFERRED_SIZE, 120, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addGap(34, 34, 34))
@@ -362,11 +378,15 @@ public class MainInterface extends javax.swing.JFrame implements ActionListener{
                 .addComponent(jLabel4)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 138, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(55, 55, 55)
-                .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(btnAddFile, javax.swing.GroupLayout.PREFERRED_SIZE, 45, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(btnDeleteFile, javax.swing.GroupLayout.PREFERRED_SIZE, 45, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addContainerGap(19, Short.MAX_VALUE))
+                .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(jPanel3Layout.createSequentialGroup()
+                        .addGap(55, 55, 55)
+                        .addComponent(btnDeleteFile, javax.swing.GroupLayout.PREFERRED_SIZE, 45, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addContainerGap(22, Short.MAX_VALUE))
+                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel3Layout.createSequentialGroup()
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addComponent(btnUpFile, javax.swing.GroupLayout.PREFERRED_SIZE, 85, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addContainerGap())))
         );
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
@@ -386,31 +406,21 @@ public class MainInterface extends javax.swing.JFrame implements ActionListener{
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
                 .addContainerGap()
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                    .addComponent(jPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addGroup(layout.createSequentialGroup()
                         .addComponent(jPanel2, javax.swing.GroupLayout.PREFERRED_SIZE, 164, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addGap(18, 18, 18)
                         .addComponent(jPanel3, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
-                .addContainerGap())
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
 
         pack();
     }// </editor-fold>//GEN-END:initComponents
 
-    private void jLabel5MouseExited(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jLabel5MouseExited
-        // TODO add your handling code here:
-        jLabel5.setForeground(Color.BLACK);
-    }//GEN-LAST:event_jLabel5MouseExited
-
-    private void jLabel5MouseEntered(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jLabel5MouseEntered
-        // TODO add your handling code here:
-        jLabel5.setForeground(Color.BLUE);
-    }//GEN-LAST:event_jLabel5MouseEntered
-
     private void jLabel5MouseClicked(java.awt.event.MouseEvent evt) {                                     
         openFileLocation();
-    }                                    
+    }                           
 
     private void btnDeleteFileActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnDeleteFileActionPerformed
         // TODO add your handling code here:
@@ -435,7 +445,7 @@ public class MainInterface extends javax.swing.JFrame implements ActionListener{
         }
     }//GEN-LAST:event_btnDeleteFileActionPerformed
 
-    private void btnAddFileActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnAddFileActionPerformed
+    private void btnUpFileActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnUpFileActionPerformed
         // TODO add your handling code here:
         JFileChooser chooser=new JFileChooser(pathChooser);
 
@@ -465,14 +475,7 @@ public class MainInterface extends javax.swing.JFrame implements ActionListener{
         } catch (IOException ex) {
             Logger.getLogger(MainInterface.class.getName()).log(Level.SEVERE, null, ex);
         }
-    }//GEN-LAST:event_btnAddFileActionPerformed
-
-    private void tfSearchKeyPressed(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_tfSearchKeyPressed
-        if(evt.getKeyCode()==KeyEvent.VK_ENTER)
-        {
-            if(tfSearch.getText().equals("")) JOptionPane.showConfirmDialog(null, "Chưa nhập tên tìm kiếm");
-        }
-    }//GEN-LAST:event_tfSearchKeyPressed
+    }//GEN-LAST:event_btnUpFileActionPerformed
 
     private void listProcessFileMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_listProcessFileMouseClicked
         // TODO add your handling code here:
@@ -500,12 +503,25 @@ public class MainInterface extends javax.swing.JFrame implements ActionListener{
         */
     }//GEN-LAST:event_listProcessFileMouseClicked
 
-     public void actionPerform(ActionEvent e) {
-        if ((JMenuItem) e.getSource() == miOpen) {
-            System.out.println("bạn chọn open");
+    private void jLabel5MouseExited(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jLabel5MouseExited
+        // TODO add your handling code here:
+        jLabel5.setForeground(Color.BLACK);
+    }//GEN-LAST:event_jLabel5MouseExited
+
+    private void jLabel5MouseEntered(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jLabel5MouseEntered
+        // TODO add your handling code here:
+        jLabel5.setForeground(Color.BLUE);
+    }//GEN-LAST:event_jLabel5MouseEntered
+
+    
+
+    private void tfSearchKeyPressed(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_tfSearchKeyPressed
+        if(evt.getKeyCode()==KeyEvent.VK_ENTER)
+        {
+            if(tfSearch.getText().equals("")) JOptionPane.showConfirmDialog(null, "Chưa nhập tên tìm kiếm");
         }
-    }
-                          
+    }//GEN-LAST:event_tfSearchKeyPressed
+
     private void tfSearchActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_tfSearchActionPerformed
 
         // TODO add your handling code here:
@@ -516,6 +532,12 @@ public class MainInterface extends javax.swing.JFrame implements ActionListener{
         tfSearch.setText("");
     }//GEN-LAST:event_tfSearchMousePressed
 
+     public void actionPerform(ActionEvent e) {
+        if ((JMenuItem) e.getSource() == miOpen) {
+            System.out.println("bạn chọn open");
+        }
+    }
+                          
     /**
      * @param args the command line arguments
      */
@@ -552,9 +574,9 @@ public class MainInterface extends javax.swing.JFrame implements ActionListener{
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
-    private javax.swing.JButton btnAddFile;
     private javax.swing.JButton btnDeleteFile;
-    private javax.swing.JLabel jLabel3;
+    private javax.swing.JButton btnUpFile;
+    private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel4;
     private javax.swing.JLabel jLabel5;
     private javax.swing.JLabel jLabel6;
@@ -562,13 +584,13 @@ public class MainInterface extends javax.swing.JFrame implements ActionListener{
     private javax.swing.JPanel jPanel2;
     private javax.swing.JPanel jPanel3;
     private javax.swing.JScrollPane jScrollPane1;
-    private javax.swing.JScrollPane jScrollPane2;
     private javax.swing.JScrollPane jScrollPane3;
+    private javax.swing.JScrollPane jScrollPane4;
     private javax.swing.JTable jTable1;
     private javax.swing.JLabel lYourHostName;
     private javax.swing.JLabel lYourIP;
-    private javax.swing.JList<String> listResultFile;
     private javax.swing.JPopupMenu puMenu1;
+    private javax.swing.JTable tableDownloadProcess;
     private javax.swing.JTable tableFileList;
     private javax.swing.JTextField tfSearch;
     // End of variables declaration//GEN-END:variables
