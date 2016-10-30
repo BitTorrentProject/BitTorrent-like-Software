@@ -23,7 +23,10 @@ public class Chunk {
     public int getID() {
         return ID;
     }
-    public double GetSize(){
+    public double getSize(){
         return size;
+    }
+    public byte [] getData(){
+        return data;
     }
 }
