@@ -18,6 +18,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
+import java.util.Hashtable;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -138,14 +139,21 @@ public class UploadingFile {
         FileOutputStream fos = new FileOutputStream(file);
  
 	BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(fos));
-        bw.write(FileName + "-----------Size: " + this.size/(1024*1024) + "MB \n");
+        bw.write(FileName + "-----------Size: " + (double)this.size/(1024*1024) + "MB \n");
         bw.newLine();
+        
+        Hashtable balance =new Hashtable();
         for (int i = 0; i < this.chunks.size(); i++){
             Chunk chunk = this.chunks.get(i);
-            bw.write("++ chunk : " + chunk.getID() + "\n");
+            bw.write("-- chunk : " + chunk.getID() + "\n");
             bw.newLine();
             String n = String.format("%.10f", chunk.getSize());
-            bw.write("++ size: " + n + "\n");   
+            bw.write("   size: " + n + "\n");   
+            bw.newLine();
+            
+            balance.put(chunk.getID(), chunk.getData());
+            Object HashValue = (Object)balance.get(chunk.getID());
+            bw.write("   Hash Value: " + HashValue.toString() + "\n");   
             bw.newLine();
         }
         
