@@ -107,7 +107,14 @@ public class MainInterface extends javax.swing.JFrame implements ActionListener{
      */
     private void loadFilesFromLocalBitTorrent()
     {
+        new File("BitTorrent").mkdir();
         File folder = new File("BitTorrent");
+        
+          
+          // folder=new File("BitTorrent");
+        
+            
+        
         for (final File fileEntry : folder.listFiles()) {
             if (!fileEntry.isDirectory()) {
                 // if the file does not contain extension .torrent
@@ -523,6 +530,7 @@ public class MainInterface extends javax.swing.JFrame implements ActionListener{
 
     private void btnUpFileActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnUpFileActionPerformed
         // TODO add your handling code here:
+        new File("BitTorrent").mkdir();
         JFileChooser chooser=new JFileChooser(pathChooser);
 
         chooser.showOpenDialog(null);
