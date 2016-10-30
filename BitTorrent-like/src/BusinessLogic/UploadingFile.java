@@ -70,8 +70,6 @@ public class UploadingFile {
       FileChannel destChannel = null;
       try {
           sourceChannel = new FileInputStream(source).getChannel();
-          sourceChannel = new FileInputStream(source).getChannel();
-          
           destChannel = new FileOutputStream(dest).getChannel();
           destChannel.transferFrom(sourceChannel, 0, sourceChannel.size());
          }finally{
