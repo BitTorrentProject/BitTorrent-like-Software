@@ -660,9 +660,10 @@ public class MainInterface extends javax.swing.JFrame implements ActionListener{
     
     public String RoundFileSize(long size)
     {
+       // Double d;
         if(size<1024) return Long.toString(size)+" Byte";
-        if(size<1024*1024) return Double.toString(size/1024.0)+" KB";
-        if(size<1024*1024*1024) return Double.toString( size/(1024.0*1024))+" MB";
+        if(size<1024*1024) return String.format("%.2f", (double)size/1024)+" KB";
+        if(size<1024*1024*1024) return String.format("%.2f", (double)size/(1024.0*1024))+" MB";
         return "";
     }
 }
