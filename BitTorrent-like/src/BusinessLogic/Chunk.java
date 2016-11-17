@@ -6,7 +6,10 @@
 package BusinessLogic;
 
 import java.io.Serializable;
+<<<<<<< HEAD
 import java.util.Vector;
+=======
+>>>>>>> origin/master
 
 /**
  *
@@ -14,10 +17,17 @@ import java.util.Vector;
  */
 public class Chunk implements Serializable{
     private int ID;
+<<<<<<< HEAD
     private Vector<Machine> ContainingMachine;
     private double Size;
     private byte[] Data;
     String Hash;
+=======
+    //private Machine ContainingMachine;
+    private double size;
+    private byte[] data;
+    
+>>>>>>> origin/master
     public Chunk(int PacketID, double Size, byte[] bytes){
         ID = PacketID;
         this.Size = Size;
