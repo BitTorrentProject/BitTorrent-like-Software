@@ -19,22 +19,23 @@ import java.util.logging.Logger;
  * @author admin
  */
 public class Machine {
-    private String IPAddr;
-    private Vector<UploadingFile> Files;
+    private InetAddress IPAddr;
+    private Vector<UploadingFile> UploadedFiles; // your local files
+    private Vector<UploadingFile> FoundFiles; // files found in network
     private Vector<Machine> ConnectedMachines;
     private Socket Socket;
     //private List<Chunk> chunksInside;
     
     public Machine() {
-        InetAddress addressIP = null;
+        //InetAddress addressIP = null;
         try {
-            addressIP = InetAddress.getLocalHost();
+            IPAddr = InetAddress.getLocalHost();
         } catch (UnknownHostException ex) {
             Logger.getLogger(Machine.class.getName()).log(Level.SEVERE, null, ex);
         }
-        IPAddr = addressIP.getHostAddress().toString();
+        //IPAddr = addressIP.getHostAddress().toString();
         
-        Files = new Vector<>();
+        UploadedFiles = new Vector<>();
         ConnectedMachines = new Vector<>();
         /*File folder = new File("BitTorrent");
         
@@ -50,15 +51,15 @@ public class Machine {
     }
     
     public void AddFile(UploadingFile file) {
-        this.Files.addElement(file);
+        this.UploadedFiles.addElement(file);
     }
     
     public void RemoveFileAt(int index){
-        this.Files.remove(index);
+        this.UploadedFiles.remove(index);
     }
     
     public Vector<UploadingFile> GetFiles() {
-        return this.Files;
+        return this.UploadedFiles;
     }
     
 //    public List<Chunk> getChunksInside(){
