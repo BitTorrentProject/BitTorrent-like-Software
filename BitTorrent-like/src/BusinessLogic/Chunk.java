@@ -5,13 +5,15 @@
  */
 package BusinessLogic;
 
+import java.io.Serializable;
+
 /**
  *
  * @author admin
  */
-public class Chunk {
+public class Chunk implements Serializable{
     private int ID;
-    private Machine ContainingMachine;
+    //private Machine ContainingMachine;
     private double size;
     private byte[] data;
     
