@@ -3,12 +3,10 @@
     <editor-bookmarks xmlns="http://www.netbeans.org/ns/editor-bookmarks/2" lastBookmarkId="0"/>
     <open-files xmlns="http://www.netbeans.org/ns/projectui-open-files/2">
         <group>
-            <file>file:/D:/MMTNC/BitTorrent-like-Software/BitTorrent-like/src/Image/rsz_remove.png</file>
-            <file>file:/D:/MMTNC/BitTorrent-like-Software/BitTorrent-like/src/BusinessLogic/Chunk.java</file>
-            <file>file:/D:/MMTNC/BitTorrent-like-Software/BitTorrent-like/src/Image/rsz_upfile.png</file>
-            <file>file:/D:/MMTNC/BitTorrent-like-Software/BitTorrent-like/src/BusinessLogic/Socket.java</file>
-            <file>file:/D:/MMTNC/BitTorrent-like-Software/BitTorrent-like/src/GraphicInterface/MainInterface.java</file>
-            <file>file:/D:/MMTNC/BitTorrent-like-Software/BitTorrent-like/src/BusinessLogic/UploadingFile.java</file>
+            <file>file:/D:/study_documents/Computer%20Network/HCMUS%20-%20advanced%20computer%20network/Projects/BitTorrent%20Project/BitTorrent-like-Software/BitTorrent-like/src/BusinessLogic/Machine.java</file>
+            <file>file:/D:/study_documents/Computer%20Network/HCMUS%20-%20advanced%20computer%20network/Projects/BitTorrent%20Project/BitTorrent-like-Software/BitTorrent-like/src/BusinessLogic/Chunk.java</file>
+            <file>file:/D:/study_documents/Computer%20Network/HCMUS%20-%20advanced%20computer%20network/Projects/BitTorrent%20Project/BitTorrent-like-Software/BitTorrent-like/src/GraphicInterface/MainInterface.java</file>
+            <file>file:/D:/study_documents/Computer%20Network/HCMUS%20-%20advanced%20computer%20network/Projects/BitTorrent%20Project/BitTorrent-like-Software/BitTorrent-like/src/BusinessLogic/UploadingFile.java</file>
         </group>
     </open-files>
 </project-private>
