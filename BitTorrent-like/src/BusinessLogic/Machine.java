@@ -22,8 +22,18 @@ public class Machine {
     private String IPAddr;
     private Vector<UploadingFile> Files;
     private Vector<Machine> ConnectedMachines;
+<<<<<<< HEAD
     private Socket Socket;
     //private List<Chunk> chunksInside;
+=======
+<<<<<<< HEAD
+    private Socket Socket;
+    //private List<Chunk> chunksInside;
+=======
+    private Socket socket;
+    private List<Chunk> chunksInside;
+>>>>>>> origin/master
+>>>>>>> origin/master
     
     public Machine() {
         InetAddress addressIP = null;
@@ -61,9 +71,21 @@ public class Machine {
         return this.Files;
     }
     
+<<<<<<< HEAD
 //    public List<Chunk> getChunksInside(){
 //        return this.chunksInside;
 //    }
+=======
+<<<<<<< HEAD
+//    public List<Chunk> getChunksInside(){
+//        return this.chunksInside;
+//    }
+=======
+    public List<Chunk> getChunksInside(){
+        return this.chunksInside;
+    }
+>>>>>>> origin/master
+>>>>>>> origin/master
     
     public static void main(String args[]){
         Machine m = new Machine();

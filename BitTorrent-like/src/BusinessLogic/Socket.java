@@ -28,16 +28,36 @@ import java.util.Vector;
  * @author m4rk.51jh
  */
 public class Socket {
+<<<<<<< HEAD
     private DatagramSocket Socket = null;
     //private static List<Chunk> Chunks;
     private static Vector<UploadingFile> Files;
+=======
+<<<<<<< HEAD
+    private DatagramSocket Socket = null;
+    //private static List<Chunk> Chunks;
+    private static Vector<UploadingFile> Files;
+=======
+    private DatagramSocket socket = null;
+    private static List<Chunk> chunks;
+    private static Vector<UploadingFile> files;
+>>>>>>> origin/master
+>>>>>>> origin/master
 
     public Socket() {
 
     }
 
     //----------------------Broadcasting Progress----------------------
+<<<<<<< HEAD
     
+=======
+<<<<<<< HEAD
+    
+=======
+    public 
+>>>>>>> origin/master
+>>>>>>> origin/master
     
     
     
@@ -45,15 +65,35 @@ public class Socket {
     
     
     //----------------------Download Progress----------------------
+<<<<<<< HEAD
     public void download(Vector<UploadingFile> FileList) throws IOException {
         try {
             Socket = new DatagramSocket(6060);
+=======
+<<<<<<< HEAD
+    public void download(Vector<UploadingFile> FileList) throws IOException {
+        try {
+            Socket = new DatagramSocket(6060);
+=======
+    public void download(Vector<UploadingFile> fileList) throws IOException {
+        try {
+            socket = new DatagramSocket(9876);
+>>>>>>> origin/master
+>>>>>>> origin/master
             byte[] incomingData = new byte[1024*1024];
             
                 
             //datagram packet prepared to download data
             DatagramPacket incomingPacket = new DatagramPacket(incomingData, incomingData.length);
+<<<<<<< HEAD
             Socket.receive(incomingPacket);
+=======
+<<<<<<< HEAD
+            Socket.receive(incomingPacket);
+=======
+            socket.receive(incomingPacket);
+>>>>>>> origin/master
+>>>>>>> origin/master
             //data downloaded
 
             //transfer data stream into chunk-type
@@ -63,8 +103,17 @@ public class Socket {
 
             //add chunk downloaded to chunk list
             try {
+<<<<<<< HEAD
                 FileList.get(0).getChunks().add((Chunk) ois.readObject());
                 //chunkList.add((Chunk) ois.readObject());
+=======
+<<<<<<< HEAD
+                FileList.get(0).getChunks().add((Chunk) ois.readObject());
+                //chunkList.add((Chunk) ois.readObject());
+=======
+                chunkList.add((Chunk) ois.readObject());
+>>>>>>> origin/master
+>>>>>>> origin/master
             } catch (ClassNotFoundException e) {
                 e.printStackTrace();
             }
@@ -89,15 +138,36 @@ public class Socket {
     
     
     //------------Upload Progress------------
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+>>>>>>> origin/master
     public void upload(Vector<UploadingFile> FileList) {
         try {
             
             Socket = new DatagramSocket();
+<<<<<<< HEAD
+=======
+=======
+    public void upload(List<Chunk> chunkList) {
+        try {
+            
+            socket = new DatagramSocket();
+>>>>>>> origin/master
+>>>>>>> origin/master
             
             //transfer chunk into data stream
             ByteArrayOutputStream bos = new ByteArrayOutputStream();
             ObjectOutputStream oos = new ObjectOutputStream(bos);
+<<<<<<< HEAD
             oos.writeObject(FileList.get(1).getChunks().get((1)));
+=======
+<<<<<<< HEAD
+            oos.writeObject(FileList.get(1).getChunks().get((1)));
+=======
+            oos.writeObject(chunkList.get(1)); 
+>>>>>>> origin/master
+>>>>>>> origin/master
             byte[] data = bos.toByteArray();
             
             //send chunk to destination address
