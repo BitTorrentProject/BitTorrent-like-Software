@@ -29,13 +29,13 @@ import java.util.logging.Logger;
  */
 public class UploadingFile {
     private String FileName;
-    private List<Chunk> chunks = new ArrayList();;
+    private List<Chunk> Chunks = new ArrayList();;
     
-    private long size;
+    private long Size;
     
     public UploadingFile(File f, int request) {
         if (f.exists() && f.isFile()) {
-            size = f.length();
+            Size = f.length();
             FileName = f.getName();
             
             // copying file to folder BitTorrent
@@ -55,14 +55,14 @@ public class UploadingFile {
     }
     
     //--------------------------Get methods--------------------
-    public String GetName(){
+    public String getName(){
         return FileName;
     }
-    public long GetSize() {
-        return this.size;
+    public long getSize() {
+        return Size;
     }
-    public List<Chunk> GetChunks() {
-        return this.chunks;
+    public List<Chunk> getChunks() {
+        return Chunks;
     }
     
     //---------------------------File functions methods--------------------------
@@ -89,8 +89,8 @@ public class UploadingFile {
         }
 
         // deviding file into chunks
-        if (size % (1024 * 1024) == 0) {
-            for (int i = 1; i <= size / (1024 * 1024); i++) {
+        if (Size % (1024 * 1024) == 0) {
+            for (int i = 1; i <= Size / (1024 * 1024); i++) {
                 byte[] ChunkBytes = new byte[1024 * 1024];
                 int k = 0;
                 for (int j = (int) ((i - 1) * (Math.pow(1024, 2) + 1)); j <= i * (Math.pow(1024, 2) + 1) - 1; j++) {
@@ -100,12 +100,12 @@ public class UploadingFile {
                     k++;
                 }
                 Chunk NewChunk = new Chunk(i, 1, ChunkBytes);
-                chunks.add(NewChunk);
+                Chunks.add(NewChunk);
             }
         } else {
             int i = 1;
             int j = 0;
-            for (i = 1; i <= size / (1024 * 1024); i++) {
+            for (i = 1; i <= Size / (1024 * 1024); i++) {
                 byte[] ChunkBytes = new byte[1024 * 1024];
                 int k = 0;
                 for (j = (int) ((i - 1) * (Math.pow(1024, 2) + 1)); j <= i * (Math.pow(1024, 2) + 1) - 1; j++) {
@@ -115,14 +115,14 @@ public class UploadingFile {
                     k++;
                 }
                 Chunk NewChunk = new Chunk(i, 1, ChunkBytes);
-                chunks.add(NewChunk);
+                Chunks.add(NewChunk);
             }
 
             // adding 1 byte left
-            double MByteLeft = ((double)(size)/ (1024 * 1024)) - (int)(size / (1024 * 1024));
+            double MByteLeft = ((double)(Size)/ (1024 * 1024)) - (int)(Size / (1024 * 1024));
             byte[] ChunkBytes = new byte[1024 * 1024];
             int k = 0;
-            while (j < size) {
+            while (j < Size) {
                 if (k < ChunkBytes.length) {
                     ChunkBytes[k] = fileArray[j];
                 }
@@ -130,7 +130,7 @@ public class UploadingFile {
                 j++;
             }
             Chunk NewChunk = new Chunk(i, MByteLeft, ChunkBytes);
-            chunks.add(NewChunk);
+            Chunks.add(NewChunk);
         }
     }
     
@@ -139,12 +139,12 @@ public class UploadingFile {
         FileOutputStream fos = new FileOutputStream(file);
  
 	BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(fos));
-        bw.write(FileName + "-----------Size: " + (double)this.size/(1024*1024) + "MB \n");
+        bw.write(FileName + "-----------Size: " + (double)this.Size/(1024*1024) + "MB \n");
         bw.newLine();
         
         Hashtable balance =new Hashtable();
-        for (int i = 0; i < this.chunks.size(); i++){
-            Chunk chunk = this.chunks.get(i);
+        for (int i = 0; i < this.Chunks.size(); i++){
+            Chunk chunk = this.Chunks.get(i);
             bw.write("-- chunk : " + chunk.getID() + "\n");
             bw.newLine();
             String n = String.format("%.10f", chunk.getSize());

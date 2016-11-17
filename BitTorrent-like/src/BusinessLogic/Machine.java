@@ -9,6 +9,7 @@ import java.io.File;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.util.List;
 import java.util.Vector;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -18,9 +19,11 @@ import java.util.logging.Logger;
  * @author admin
  */
 public class Machine {
-    private String IPaddr;
+    private String IPAddr;
     private Vector<UploadingFile> Files;
     private Vector<Machine> ConnectedMachines;
+    private Socket Socket;
+    //private List<Chunk> chunksInside;
     
     public Machine() {
         InetAddress addressIP = null;
@@ -29,7 +32,7 @@ public class Machine {
         } catch (UnknownHostException ex) {
             Logger.getLogger(Machine.class.getName()).log(Level.SEVERE, null, ex);
         }
-        IPaddr = addressIP.getHostAddress().toString();
+        IPAddr = addressIP.getHostAddress().toString();
         
         Files = new Vector<>();
         ConnectedMachines = new Vector<>();
@@ -57,6 +60,11 @@ public class Machine {
     public Vector<UploadingFile> GetFiles() {
         return this.Files;
     }
+    
+//    public List<Chunk> getChunksInside(){
+//        return this.chunksInside;
+//    }
+    
     public static void main(String args[]){
         Machine m = new Machine();
         System.out.println("Finish running");
