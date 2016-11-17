@@ -348,6 +348,8 @@ public class MainInterface extends javax.swing.JFrame implements ActionListener{
         jLabel4.setToolTipText("");
 
         btnUpFile.setFont(new java.awt.Font(".VnBook-AntiquaH", 1, 12)); // NOI18N
+        btnUpFile.setIcon(new javax.swing.ImageIcon(getClass().getResource("/Image/rsz_upfile.png"))); // NOI18N
+        btnUpFile.setDisabledIcon(new javax.swing.ImageIcon(getClass().getResource("/Image/rsz_upfile.png"))); // NOI18N
         btnUpFile.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 btnUpFileActionPerformed(evt);
@@ -356,6 +358,7 @@ public class MainInterface extends javax.swing.JFrame implements ActionListener{
 
         btnDeleteFile.setFont(new java.awt.Font(".VnBook-AntiquaH", 1, 12)); // NOI18N
         btnDeleteFile.setForeground(new java.awt.Color(255, 255, 255));
+        btnDeleteFile.setIcon(new javax.swing.ImageIcon(getClass().getResource("/Image/rsz_remove.png"))); // NOI18N
         btnDeleteFile.setPreferredSize(new java.awt.Dimension(60, 20));
         btnDeleteFile.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
