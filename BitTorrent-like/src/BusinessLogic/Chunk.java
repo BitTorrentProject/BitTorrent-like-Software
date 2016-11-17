@@ -5,28 +5,31 @@
  */
 package BusinessLogic;
 
+import java.io.Serializable;
+import java.util.Vector;
+
 /**
  *
  * @author admin
  */
-public class Chunk {
+public class Chunk implements Serializable{
     private int ID;
-    private Machine ContainingMachine;
-    private double size;
-    private byte[] data;
-    
+    private Vector<Machine> ContainingMachine;
+    private double Size;
+    private byte[] Data;
+    String Hash;
     public Chunk(int PacketID, double Size, byte[] bytes){
         ID = PacketID;
-        size = Size;
-        data = bytes.clone();
+        this.Size = Size;
+        this.Data = bytes.clone();
     }
     public int getID() {
         return ID;
     }
     public double getSize(){
-        return size;
+        return Size;
     }
     public byte [] getData(){
-        return data;
+        return Data;
     }
 }
