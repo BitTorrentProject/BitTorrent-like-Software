@@ -17,7 +17,8 @@ public class Chunk implements Serializable{
     private Vector<Machine> ContainingMachine;
     private double Size;
     private byte[] Data;
-    String Hash;
+    private Object HashValue;
+    
     public Chunk(int PacketID, double Size, byte[] bytes){
         ID = PacketID;
         this.Size = Size;
@@ -31,5 +32,12 @@ public class Chunk implements Serializable{
     }
     public byte [] getData(){
         return Data;
+    }
+    public void setHashValue(Object HashValue) {
+        this.HashValue = HashValue;
+    }
+
+    public Object getHashValue() {
+        return HashValue;
     }
 }

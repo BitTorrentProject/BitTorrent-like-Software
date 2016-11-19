@@ -82,6 +82,8 @@ public class UploadingFile {
     //------------------------File dividing method------------------------------
     private void DevideFileIntoChunks(Path p) {
         byte[] fileArray = null;
+        Hashtable balance =new Hashtable();
+        
         try {
             fileArray = Files.readAllBytes(p);
         } catch (IOException ex) {
@@ -89,6 +91,7 @@ public class UploadingFile {
         }
 
         // deviding file into chunks
+        // 
         if (Size % (1024 * 1024) == 0) {
             for (int i = 1; i <= Size / (1024 * 1024); i++) {
                 byte[] ChunkBytes = new byte[1024 * 1024];
@@ -100,6 +103,9 @@ public class UploadingFile {
                     k++;
                 }
                 Chunk NewChunk = new Chunk(i, 1, ChunkBytes);
+                
+                balance.put(NewChunk.getID(), NewChunk.getData());
+                NewChunk.setHashValue((Object)balance.get(NewChunk.getID()));
                 Chunks.add(NewChunk);
             }
         } else {
@@ -115,6 +121,9 @@ public class UploadingFile {
                     k++;
                 }
                 Chunk NewChunk = new Chunk(i, 1, ChunkBytes);
+
+                balance.put(NewChunk.getID(), NewChunk.getData());
+                NewChunk.setHashValue((Object)balance.get(NewChunk.getID()));
                 Chunks.add(NewChunk);
             }
 
@@ -130,6 +139,9 @@ public class UploadingFile {
                 j++;
             }
             Chunk NewChunk = new Chunk(i, MByteLeft, ChunkBytes);
+            
+            balance.put(NewChunk.getID(), NewChunk.getData());
+            NewChunk.setHashValue((Object)balance.get(NewChunk.getID()));
             Chunks.add(NewChunk);
         }
     }
@@ -142,18 +154,15 @@ public class UploadingFile {
         bw.write(FileName + "-----------Size: " + (double)this.Size/(1024*1024) + "MB \n");
         bw.newLine();
         
-        Hashtable balance =new Hashtable();
+        //Hashtable balance =new Hashtable();
         for (int i = 0; i < this.Chunks.size(); i++){
             Chunk chunk = this.Chunks.get(i);
             bw.write("-- chunk : " + chunk.getID() + "\n");
             bw.newLine();
             String n = String.format("%.10f", chunk.getSize());
             bw.write("   size: " + n + "\n");   
-            bw.newLine();
-            
-            balance.put(chunk.getID(), chunk.getData());
-            Object HashValue = (Object)balance.get(chunk.getID());
-            bw.write("   Hash Value: " + HashValue.toString() + "\n");   
+            bw.newLine(); 
+            bw.write("   Hash Value: " + chunk.getHashValue().toString() + "\n");   
             bw.newLine();
         }
         

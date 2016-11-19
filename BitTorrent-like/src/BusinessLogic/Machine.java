@@ -25,7 +25,7 @@ public class Machine {
     private Vector<Machine> ConnectedMachines;
     private Socket Socket;
     //private List<Chunk> chunksInside;
-    
+   
     public Machine() {
         //InetAddress addressIP = null;
         try {
