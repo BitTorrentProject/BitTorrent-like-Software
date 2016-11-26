@@ -39,17 +39,18 @@ public class MainInterface extends javax.swing.JFrame implements ActionListener{
     /**
      * Creates new form MainInterface
      */
-    DefaultListModel listModelResultFile=new DefaultListModel();
+   // DefaultListModel listModelResultFile=new DefaultListModel();
     
     Object[] columnFileList={"FileName","Size","Status"};
     DefaultTableModel tableModelFileList=new DefaultTableModel(columnFileList, 0);
     
     
-    Object[] columnDownloadProcess={"FileName","Size","Process"};
-    DefaultTableModel tableModelDownloadProcess=new DefaultTableModel(columnDownloadProcess,0);
+   Object[] columnDownloadProcess={"FileName","Size","Process"};
+   Object[][] g={{"4","5","9"}};
+   DefaultTableModel tableModelDownloadProcess=new DefaultTableModel(g, columnFileList);
     
-    Object[] columnInforPeerConnect={"IP","Host Name","Status"};
-    DefaultTableModel tableModelInforPeerConnect=new DefaultTableModel(columnInforPeerConnect, 0);
+   Object[] columnInforPeerConnect={"IP","Host Name","Status"};
+   DefaultTableModel tableModelInforPeerConnect=new DefaultTableModel(columnInforPeerConnect, 0);
     
     
     
@@ -57,10 +58,15 @@ public class MainInterface extends javax.swing.JFrame implements ActionListener{
     String pathChooser="";
     Machine m = new Machine();
 
-    JPopupMenu puMenu=new JPopupMenu();
+    JPopupMenu fileListPopupMenu=new JPopupMenu();                 
+    JPopupMenu downloadProcessPopupMenu=new JPopupMenu();                 
+    
     JMenuItem miOpen=new JMenuItem("Open");
     JMenuItem miDelete=new JMenuItem("Delete");
     JMenuItem miOpenLocation=new JMenuItem("Open Folder");
+    
+    
+    JMenuItem miDownload=new JMenuItem("Download");
  
     public MainInterface() {
         initComponents();
@@ -75,7 +81,8 @@ public class MainInterface extends javax.swing.JFrame implements ActionListener{
         this.loadFilesFromLocalBitTorrent();
         setResizable(false);
       
-       tableFileList.setComponentPopupMenu(puMenu);
+       tableFileList.setComponentPopupMenu(fileListPopupMenu);
+       tableDownloadProcess.setComponentPopupMenu(downloadProcessPopupMenu);
        
        tableDownloadProcess.setModel(tableModelDownloadProcess);
        tableInforPeerConnect.setModel(tableModelInforPeerConnect);
@@ -93,12 +100,18 @@ public class MainInterface extends javax.swing.JFrame implements ActionListener{
     public void initPopupMenu()
     {
         
-        puMenu.add(miOpen);
-        puMenu.add(miDelete);
-        puMenu.add(miOpenLocation);
+        fileListPopupMenu.add(miOpen);
+        fileListPopupMenu.add(miDelete);
+        fileListPopupMenu.add(miOpenLocation);
         miOpen.addActionListener(this);
         miDelete.addActionListener(this);
         miOpenLocation.addActionListener(this);
+        
+        
+        downloadProcessPopupMenu.add(miDownload);
+        miDownload.addActionListener(this);
+        
+        
     }
     /**
      * This method is called from within the constructor to initialize the form.
@@ -109,12 +122,6 @@ public class MainInterface extends javax.swing.JFrame implements ActionListener{
     {
         new File("BitTorrent").mkdir();
         File folder = new File("BitTorrent");
-        
-          
-          // folder=new File("BitTorrent");
-        
-            
-        
         for (final File fileEntry : folder.listFiles()) {
             if (!fileEntry.isDirectory()) {
                 // if the file does not contain extension .torrent
@@ -228,7 +235,7 @@ public class MainInterface extends javax.swing.JFrame implements ActionListener{
 
         tableDownloadProcess.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
-
+                {"44", "142", null}
             },
             new String [] {
                 "File", "Size", "Process"
@@ -683,6 +690,8 @@ public class MainInterface extends javax.swing.JFrame implements ActionListener{
             openFile();
         if((JMenuItem)e.getSource()==miOpenLocation)
             openFileLocation();
+        if((JMenuItem)e.getSource()==miDownload)
+            JOptionPane.showMessageDialog(null, "Gọi hàm download");
     }
     
     public String RoundFileSize(long size)
