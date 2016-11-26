@@ -515,7 +515,8 @@ public class MainInterface extends javax.swing.JFrame implements ActionListener{
     private void tfSearchKeyPressed(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_tfSearchKeyPressed
         if(evt.getKeyCode()==KeyEvent.VK_ENTER)
         {
-            if(tfSearch.getText().equals("")) JOptionPane.showConfirmDialog(null, "Chưa nhập tên tìm kiếm");
+            if(tfSearch.getText().equals("")) JOptionPane.showMessageDialog(null, "Chưa nhập tên tìm kiếm");
+            JOptionPane.showMessageDialog(null,("gọi hàm tìm kiếm với thông tin : "+tfSearch.getText()));
         }
     }//GEN-LAST:event_tfSearchKeyPressed
 
