@@ -24,6 +24,10 @@ import javax.swing.JMenuItem;
 import javax.swing.JPopupMenu;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseListener;
+import java.io.BufferedReader;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.util.Scanner;
 
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -68,7 +72,7 @@ public class MainInterface extends javax.swing.JFrame implements ActionListener{
     
     JMenuItem miDownload=new JMenuItem("Download");
  
-    public MainInterface() {
+    public MainInterface() throws FileNotFoundException {
         initComponents();
         initPopupMenu();
         setVisible(true);
@@ -95,6 +99,7 @@ public class MainInterface extends javax.swing.JFrame implements ActionListener{
        //jLabel2.setIcon(new ImageIcon(new ImageIcon("src/Image/rsz_upfile.png").getImage().getScaledInstance(40, 40, Image.SCALE_DEFAULT)));
        //btnUpFile.setIcon(new ImageIcon(new ImageIcon("src/Image/rsz_upfile.png").getImage().getScaledInstance(100, 100, Image.SCALE_DEFAULT)));
       // btnDeleteFile.setIcon(new ImageIcon(new ImageIcon("src/Image/rsz_remove.png").getImage().getScaledInstance(100, 100, Image.SCALE_DEFAULT)));
+       String Peers[] = ReadInfoEachMachine();
        
     }
     public void initPopupMenu()
@@ -147,6 +152,20 @@ public class MainInterface extends javax.swing.JFrame implements ActionListener{
                 return;
             }
         }
+    }
+    
+    private String[] ReadInfoEachMachine() throws FileNotFoundException {
+        Scanner s = null;
+        s = new Scanner(new BufferedReader(new FileReader("EtatCourrant.txt")));
+
+        int nPeer = Integer.parseInt(s.next());
+        
+        String PeerInfo[] = new String[nPeer];
+        for (int i = 0; i < nPeer; i++) {
+            PeerInfo[i] = s.next(); 
+        }
+        
+        return PeerInfo;
     }
     public String getYourIP()
     {
@@ -606,7 +625,11 @@ public class MainInterface extends javax.swing.JFrame implements ActionListener{
         /* Create and display the form */
         java.awt.EventQueue.invokeLater(new Runnable() {
             public void run() {
-                new MainInterface().setVisible(true);
+                try {
+                    new MainInterface().setVisible(true);
+                } catch (FileNotFoundException ex) {
+                    Logger.getLogger(MainInterface.class.getName()).log(Level.SEVERE, null, ex);
+                }
                 
             }
         });
