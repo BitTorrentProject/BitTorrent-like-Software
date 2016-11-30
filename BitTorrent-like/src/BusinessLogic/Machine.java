@@ -7,6 +7,7 @@ package BusinessLogic;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.Serializable;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.List;
@@ -18,12 +19,14 @@ import java.util.logging.Logger;
  *
  * @author admin
  */
-public class Machine {
+public class Machine  implements Serializable{
+
+    
     private InetAddress IPAddr;
     private Vector<UploadingFile> UploadedFiles; // your local files
     private Vector<UploadingFile> FoundFiles; // files found in network
-    private Vector<Machine> ConnectedMachines;
-    private Socket Socket;
+    //private Vector<Machine> ConnectedMachines;
+    
     //private List<Chunk> chunksInside;
    
     public Machine() {
@@ -34,9 +37,10 @@ public class Machine {
             Logger.getLogger(Machine.class.getName()).log(Level.SEVERE, null, ex);
         }
         //IPAddr = addressIP.getHostAddress().toString();
+        Object o = new Object();
         
         UploadedFiles = new Vector<>();
-        ConnectedMachines = new Vector<>();
+        //ConnectedMachines = new Vector<>();
         /*File folder = new File("BitTorrent");
         
         for (final File fileEntry : folder.listFiles()) {
@@ -65,6 +69,10 @@ public class Machine {
 //    public List<Chunk> getChunksInside(){
 //        return this.chunksInside;
 //    }
+    
+    public InetAddress getIPAddr() {
+        return IPAddr;
+    }
     
     public static void main(String args[]){
         Machine m = new Machine();

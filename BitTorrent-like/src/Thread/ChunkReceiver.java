@@ -5,6 +5,9 @@
  */
 package Thread;
 
+import BusinessLogic.UploadingFile;
+import Converter.TypeConverter;
+import GraphicInterface.MainInterface;
 import java.io.BufferedInputStream;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -13,68 +16,105 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
+import java.net.InetAddress;
 import java.net.SocketException;
+import java.util.Vector;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.swing.JOptionPane;
+import javax.swing.table.DefaultTableModel;
 
 /**
  *
  * @author admin
  */
 public class ChunkReceiver implements Runnable{
-    private DatagramSocket socket;
-    private byte[] ReceivedData;
-    private DatagramPacket packet;
-    private final int port = 9090;
-    private int Request;
-    private ObjectInputStream is;
-    private ObjectOutputStream os;
-    public ChunkReceiver() throws IOException{
-        try {
-            ReceivedData = new byte[1024];
-            socket = new DatagramSocket(port);
-            //packet = new DatagramPacket(ReceivedData, ReceivedData.length);
-            
-            byte[] recvBuf = new byte[5000];
-            ByteArrayInputStream byteStream = new ByteArrayInputStream(recvBuf);
-            is = new ObjectInputStream(new BufferedInputStream(byteStream));
-            
-            ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-            os = new ObjectOutputStream(outputStream);
-        } catch (SocketException ex) {
-            Logger.getLogger(ChunkReceiver.class.getName()).log(Level.SEVERE, null, ex);
-            socket.close();
-        }
+    protected DatagramSocket socket;
+    protected byte[] ReceivedData;
+    protected final int port = 9090;
+    protected int Request;
+    protected MainInterface Interface;
+    protected InetAddress IPDest;
+    protected Thread thread;
+    
+    public ChunkReceiver(String IPNeighbor, MainInterface Interface, DatagramSocket sock) throws IOException{
+        thread = new Thread(this);
+        this.Interface = Interface;
+        ReceivedData = new byte[1024];
+        socket = sock;
         
+        // destination IP
+        IPDest = InetAddress.getByName(IPNeighbor);
     }
     
     @Override
     public void run() {
-        
+        // sending request
+        this.SendRequest();
+
         try {
-            this.SendRequest();
+            DatagramPacket packet = new DatagramPacket(ReceivedData, ReceivedData.length);
+
+            // (2) other machine reply and we catch the message
+            socket.receive(packet);
             
-            int receivedMessage = is.readInt();
-            
-            // the replied message is 0 : 
-            if (receivedMessage == 0) {
-                
+            synchronized (packet) {
+                // convert data in received packet to int
+                int receivedMessage = (int) TypeConverter.deserialize(packet.getData());
+
+                // the replied message is 0 : searching files
+                if (receivedMessage == 1) {
+                    DefaultTableModel model = (DefaultTableModel) this.Interface.GetTableDownloadProcess().getModel();
+                    model.getDataVector().removeAllElements();
+                    Vector<UploadingFile> FoundFiles;
+
+                    while (true) {
+                        // (3) receiving Found files
+                        socket.receive(packet);
+                        FoundFiles = (Vector<UploadingFile>) TypeConverter.deserialize(packet.getData());
+
+                        if (FoundFiles.size() == 0) {
+                            break;
+                        }
+                        for (UploadingFile File : FoundFiles) {
+                            model.addRow(new Object[]{File.getName(), File.getSize(), ""});
+                        }
+                    }
+                }
             }
         } catch (IOException ex) {
             Logger.getLogger(ChunkReceiver.class.getName()).log(Level.SEVERE, null, ex);
-            socket.close();
+            this.socket.close();
+        } catch (ClassNotFoundException ex) {
+            Logger.getLogger(ChunkReceiver.class.getName()).log(Level.SEVERE, null, ex);
+            this.socket.close();
         }
-        
     }
-    
+
     public void SetRequest(int message) {
         Request = message;
     }
     
-    private synchronized void SendRequest(){
+    private void SendRequest(){
         try {
-            // send message to other machines
-            os.writeInt(Request);
+            byte[] request = TypeConverter.serialize(Request);
+            DatagramPacket packet = new DatagramPacket(request, request.length, IPDest, port);
+            
+            // (0) send message to other machines
+            socket.send(packet);
+            
+            if (Request == 1) {
+                byte[] FileNameByte = TypeConverter.serialize(this.Interface.GettfSearch().getText());
+                packet = new DatagramPacket(FileNameByte, FileNameByte.length, IPDest, port);
+                
+                // (1) sending file name to search
+                socket.send(packet);
+                
+                byte[] LocalIPByteArray = TypeConverter.serialize(this.Interface.GetMachine().getIPAddr());
+                packet = new DatagramPacket(LocalIPByteArray, LocalIPByteArray.length, IPDest, port);
+                // (-1) sending local IP
+                socket.send(packet);
+            }
         } catch (IOException ex) {
             Logger.getLogger(ChunkReceiver.class.getName()).log(Level.SEVERE, null, ex);
             socket.close();
@@ -83,5 +123,10 @@ public class ChunkReceiver implements Runnable{
     
     private void ReceiveChunks(){
         
+    }
+    
+    // starting the thread
+    public void start() {
+        thread.start();
     }
 }

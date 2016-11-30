@@ -5,6 +5,9 @@
  */
 package Thread;
 
+import BusinessLogic.UploadingFile;
+import Converter.TypeConverter;
+import GraphicInterface.MainInterface;
 import java.io.BufferedInputStream;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -27,77 +30,75 @@ import java.util.logging.Logger;
  */
 public class ChunkSender implements Runnable{
     private DatagramSocket socket;
-    private byte[] SentData;
-    private DatagramPacket packet;
+    private byte[] Data;
     private final int port = 9090;
-    public ChunkSender(String IP) {
-        try {
-            SentData = new byte[1024];
-            socket = new DatagramSocket();
-            InetAddress IPAddress = InetAddress.getByName(IP);
-            //packet = new DatagramPacket(SentData, SentData.length, IPAddress, port);
-            
-        } catch (SocketException ex) {
-            Logger.getLogger(ChunkSender.class.getName()).log(Level.SEVERE, null, ex);
-            System.exit(0);
-            socket.close();
-        } catch (UnknownHostException ex) {
-            Logger.getLogger(ChunkSender.class.getName()).log(Level.SEVERE, null, ex);
-            System.exit(0);
-            socket.close();
-        }
+    private MainInterface Interface;
+    protected Thread thread;
+    
+    public ChunkSender(MainInterface Interface, DatagramSocket sock) {
+        thread = new Thread(this);
+        this.Interface = Interface;
+        Data = new byte[1024];
+        socket = sock;
     }
     
     @Override
     public void run() {
         while (true) {
-            ObjectInputStream is = null;
             try {
-                byte[] recvBuf = new byte[5000];
-                ByteArrayInputStream byteStream = new ByteArrayInputStream(recvBuf);
-                is = new ObjectInputStream(new BufferedInputStream(byteStream));
+                // (0) get message from a machine
+                DatagramPacket MessagePacket = new DatagramPacket(Data, Data.length);
+                socket.receive(MessagePacket);
                 
-                ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-                ObjectOutputStream os = new ObjectOutputStream(outputStream);
-        
-                // get message from a machine
-                int message = is.readInt();
+                int message = (int) TypeConverter.deserialize(MessagePacket.getData());
                 
                 // a machine wants to search a file in your machine (message = 1)
                 if (message == 1) {
-                    String FileName = is.readUTF();
-                    Vector<String> FoundFiles = this.SearchFile(FileName);
+                    DatagramPacket FileNamePacket = new DatagramPacket(Data, Data.length);
+                    // (1) receive file's name to search
+                    socket.receive(FileNamePacket);
+                    
+                    // searching the file in local
+                    Vector<UploadingFile> FoundFiles = this.SearchFile((String)TypeConverter.deserialize(FileNamePacket.getData()));
+                    
+                    DatagramPacket IpSrcPacket = new DatagramPacket(Data, Data.length);
+                    // (-1) receive file's name to search
+                    socket.receive(IpSrcPacket);
                     
                     // reply this message to confirm that I received the message
-                    os.writeInt(message);
+                    // (2)
+                    byte[] reply = TypeConverter.serialize(message);
+                    DatagramPacket replyPacket = new DatagramPacket(reply, reply.length, (InetAddress) TypeConverter.deserialize(IpSrcPacket.getData()),port);
+                    socket.send(replyPacket);
                     
-                    // send found files
-                    os.writeObject(FoundFiles);
+                    // (3) send found files
+                    DatagramPacket FoundFilesPacket = new DatagramPacket(TypeConverter.serialize(FoundFiles), TypeConverter.serialize(FoundFiles).length, (InetAddress) TypeConverter.deserialize(TypeConverter.serialize(IpSrcPacket)),port);
+                    socket.send(replyPacket);
                 }
             } catch (IOException ex) {
                 Logger.getLogger(ChunkSender.class.getName()).log(Level.SEVERE, null, ex);
-            } finally {
-                try {
-                    is.close();
-                } catch (IOException ex) {
-                    Logger.getLogger(ChunkSender.class.getName()).log(Level.SEVERE, null, ex);
-                }
+                socket.close();
+            } catch (ClassNotFoundException ex) {
+                Logger.getLogger(ChunkSender.class.getName()).log(Level.SEVERE, null, ex);
+                socket.close();
             }
         }
     }
     
-    private Vector<String> SearchFile(String FileName) {
+    private Vector<UploadingFile> SearchFile(String FileName) {
         File folder = new File("BitTorrent");
-        Vector<String> FoundFiles = new Vector<>();
+        Vector<UploadingFile> FoundFiles = new Vector<>();
         
-        for (final File fileEntry : folder.listFiles()) {
-            if (!fileEntry.isDirectory()) {
-                if (fileEntry.getName().matches("(.*)" + FileName + "(.*)")) {
-                    FoundFiles.addElement(fileEntry.getName());
-                }
+        for (final UploadingFile fileEntry : this.Interface.GetMachine().GetFiles()) {
+            if (fileEntry.getName().matches("(.*)" + FileName + "(.*)")) {
+                FoundFiles.addElement(fileEntry);
             }
         }
         
         return FoundFiles;
+    }
+    
+    public void start(){
+        this.thread.start();
     }
 }

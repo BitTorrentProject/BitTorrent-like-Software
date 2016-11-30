@@ -12,6 +12,7 @@ import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
+import java.io.Serializable;
 import java.nio.channels.FileChannel;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -27,7 +28,7 @@ import java.util.logging.Logger;
  *
  * @author admin
  */
-public class UploadingFile {
+public class UploadingFile  implements Serializable{
     private String FileName;
     private List<Chunk> Chunks = new ArrayList();;
     
