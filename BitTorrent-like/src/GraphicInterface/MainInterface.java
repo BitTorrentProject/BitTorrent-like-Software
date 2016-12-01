@@ -57,7 +57,7 @@ public class MainInterface extends javax.swing.JFrame implements ActionListener{
     
    Object[] columnDownloadProcess={"FileName","Size","Process"};
    Object[][] g={{"4","5","9"}};
-   DefaultTableModel tableModelDownloadProcess=new DefaultTableModel(g, columnFileList);
+   //DefaultTableModel tableModelDownloadProcess=new DefaultTableModel(g, columnFileList);
     
    Object[] columnInforPeerConnect={"IP","Host Name","Status"};
    DefaultTableModel tableModelInforPeerConnect=new DefaultTableModel(columnInforPeerConnect, 0);
