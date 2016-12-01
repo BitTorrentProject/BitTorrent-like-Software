@@ -79,7 +79,7 @@ public class MainInterface extends javax.swing.JFrame implements ActionListener{
     JMenuItem miDownload=new JMenuItem("Download");
     
     DatagramSocket socket1 = new DatagramSocket(9090);
-    DatagramSocket socket2 = new DatagramSocket();
+    DatagramSocket socket2 = new DatagramSocket(9090);
     String Peers[];
     public MainInterface() throws FileNotFoundException, SocketException, UnknownHostException {
         initComponents();
