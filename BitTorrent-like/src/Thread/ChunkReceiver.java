@@ -79,6 +79,7 @@ public class ChunkReceiver implements Runnable{
                         }
                         for (UploadingFile File : FoundFiles) {
                             model.addRow(new Object[]{File.getName(), File.getSize(), ""});
+                            this.Interface.GetMachine().getFoundFiles().addElement(File);
                         }
                     }
                     this.Interface.GetTableDownloadProcess().setModel(model);

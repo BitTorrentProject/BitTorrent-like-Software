@@ -20,8 +20,6 @@ import java.util.logging.Logger;
  * @author admin
  */
 public class Machine  implements Serializable{
-
-    
     private InetAddress IPAddr;
     private Vector<UploadingFile> UploadedFiles; // your local files
     private Vector<UploadingFile> FoundFiles; // files found in network
@@ -40,6 +38,7 @@ public class Machine  implements Serializable{
         Object o = new Object();
         
         UploadedFiles = new Vector<>();
+        FoundFiles = new Vector<>();
         //ConnectedMachines = new Vector<>();
         /*File folder = new File("BitTorrent");
         
@@ -52,6 +51,14 @@ public class Machine  implements Serializable{
                 //System.out.println(fileEntry.getName());
             }
         }*/
+    }
+    
+    public Vector<UploadingFile> getUploadedFiles() {
+        return UploadedFiles;
+    }
+
+    public Vector<UploadingFile> getFoundFiles() {
+        return FoundFiles;
     }
     
     public void AddFile(UploadingFile file) {
