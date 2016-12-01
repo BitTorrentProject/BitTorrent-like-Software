@@ -115,8 +115,8 @@ public class MainInterface extends javax.swing.JFrame implements ActionListener{
             InetAddress IPDest = InetAddress.getByName(Peers[i]);
         }
 
-        //ChunkSender sender = new ChunkSender(this, socket2);
-        //sender.start();
+        ChunkSender sender = new ChunkSender(this, socket2);
+        sender.start();
     }
     public void initPopupMenu()
     {

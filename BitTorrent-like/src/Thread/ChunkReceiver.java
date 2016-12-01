@@ -45,6 +45,7 @@ public class ChunkReceiver implements Runnable{
         
         // destination IP
         IPDest = InetAddress.getByName(IPNeighbor);
+        System.out.println(IPDest.toString());
     }
     
     @Override
@@ -61,7 +62,7 @@ public class ChunkReceiver implements Runnable{
             synchronized (packet) {
                 // convert data in received packet to int
                 int receivedMessage = (int) TypeConverter.deserialize(packet.getData());
-
+                
                 // the replied message is 0 : searching files
                 if (receivedMessage == 1) {
                     DefaultTableModel model = (DefaultTableModel) this.Interface.GetTableDownloadProcess().getModel();
@@ -80,6 +81,7 @@ public class ChunkReceiver implements Runnable{
                             model.addRow(new Object[]{File.getName(), File.getSize(), ""});
                         }
                     }
+                    this.Interface.GetTableDownloadProcess().setModel(model);
                 }
             }
         } catch (IOException ex) {
@@ -106,15 +108,20 @@ public class ChunkReceiver implements Runnable{
             if (Request == 1) {
                 byte[] FileNameByte = TypeConverter.serialize(this.Interface.GettfSearch().getText());
                 packet = new DatagramPacket(FileNameByte, FileNameByte.length, IPDest, port);
+                System.out.println(Request);
                 
                 // (1) sending file name to search
                 socket.send(packet);
+                System.out.println(Request);
                 
                 byte[] LocalIPByteArray = TypeConverter.serialize(this.Interface.GetMachine().getIPAddr());
                 packet = new DatagramPacket(LocalIPByteArray, LocalIPByteArray.length, IPDest, port);
                 // (-1) sending local IP
                 socket.send(packet);
+                System.out.println(Request);
             }
+            
+            //System.out.println(Request);
         } catch (IOException ex) {
             Logger.getLogger(ChunkReceiver.class.getName()).log(Level.SEVERE, null, ex);
             socket.close();

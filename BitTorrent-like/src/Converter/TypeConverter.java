@@ -47,5 +47,7 @@ public class TypeConverter {
         
         for (int i = 0; i < m.GetFiles().size();i++)
             System.out.println(m.GetFiles().elementAt(i).getName());
+        
+        System.out.println(m.getIPAddr().toString());
     }
 }
