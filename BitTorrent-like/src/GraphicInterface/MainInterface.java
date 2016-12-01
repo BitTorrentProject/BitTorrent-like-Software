@@ -97,7 +97,7 @@ public class MainInterface extends javax.swing.JFrame implements ActionListener{
        tableFileList.setComponentPopupMenu(fileListPopupMenu);
        tableDownloadProcess.setComponentPopupMenu(downloadProcessPopupMenu);
        
-       tableDownloadProcess.setModel(tableModelDownloadProcess);
+       //tableDownloadProcess.setModel(tableModelDownloadProcess);
        tableInforPeerConnect.setModel(tableModelInforPeerConnect);
        tableFileList.setModel(tableModelFileList);
        
