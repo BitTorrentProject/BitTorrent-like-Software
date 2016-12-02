@@ -30,7 +30,7 @@ import java.util.logging.Logger;
  */
 public class ChunkSender implements Runnable{
     private DatagramSocket socket;
-    private final int port = 9090;
+    private final int DestPort = 9090;
     private MainInterface Interface;
     protected Thread thread;
     
@@ -46,15 +46,15 @@ public class ChunkSender implements Runnable{
         while (true) {
             try {  
                 // (0) get message from a machine
-                byte[] MessageByte = new byte[1];
+                byte[] MessageByte = new byte[1024];
                 DatagramPacket MessagePacket = new DatagramPacket(MessageByte, MessageByte.length);
                 socket.receive(MessagePacket);
                 
                 int message = (int) TypeConverter.deserialize(MessagePacket.getData());
-                
+                System.out.println(message);
                 // a machine wants to search a file in your machine (message = 1)
                 if (message == 1) {
-                    byte[] FileNameByteArray = new byte[20];
+                    byte[] FileNameByteArray = new byte[1024];
                     DatagramPacket FileNamePacket = new DatagramPacket(FileNameByteArray, FileNameByteArray.length);
                     // (1) receive file's name to search
                     socket.receive(FileNamePacket);
@@ -62,7 +62,7 @@ public class ChunkSender implements Runnable{
                     // searching the file in local
                     Vector<UploadingFile> FoundFiles = this.SearchFile((String)TypeConverter.deserialize(FileNamePacket.getData()));
                     
-                    byte[] IPByteArray = new byte[20];
+                    byte[] IPByteArray = new byte[1024];
                     DatagramPacket IpSrcPacket = new DatagramPacket(IPByteArray, IPByteArray.length);
                     // (-1) receive IP src
                     socket.receive(IpSrcPacket);
@@ -70,11 +70,11 @@ public class ChunkSender implements Runnable{
                     // reply this message to confirm that I received the message
                     // (2)
                     byte[] reply = TypeConverter.serialize(message);
-                    DatagramPacket replyPacket = new DatagramPacket(reply, reply.length, (InetAddress) TypeConverter.deserialize(IpSrcPacket.getData()),port);
+                    DatagramPacket replyPacket = new DatagramPacket(reply, reply.length, (InetAddress) TypeConverter.deserialize(IpSrcPacket.getData()),DestPort);
                     socket.send(replyPacket);
                     
                     // (3) send found files
-                    DatagramPacket FoundFilesPacket = new DatagramPacket(TypeConverter.serialize(FoundFiles), TypeConverter.serialize(FoundFiles).length, (InetAddress)TypeConverter.deserialize(IpSrcPacket.getData()),port);
+                    DatagramPacket FoundFilesPacket = new DatagramPacket(TypeConverter.serialize(FoundFiles), TypeConverter.serialize(FoundFiles).length, (InetAddress)TypeConverter.deserialize(IpSrcPacket.getData()),DestPort);
                     socket.send(FoundFilesPacket);
                 }
             } catch (IOException ex) {

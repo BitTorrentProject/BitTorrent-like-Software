@@ -31,7 +31,7 @@ import javax.swing.table.DefaultTableModel;
 public class ChunkReceiver implements Runnable{
     protected DatagramSocket socket;
     protected byte[] ReceivedData;
-    protected final int port = 9090;
+    protected final int DestPort = 6060;
     protected int Request;
     protected MainInterface Interface;
     protected InetAddress IPDest;
@@ -72,11 +72,12 @@ public class ChunkReceiver implements Runnable{
                     while (true) {
                         // (3) receiving Found files
                         socket.receive(packet);
+                        
+                        if (packet.getData().length == 0)
+                            break;
+                        
                         FoundFiles = (Vector<UploadingFile>) TypeConverter.deserialize(packet.getData());
 
-                        if (FoundFiles.size() == 0) {
-                            break;
-                        }
                         for (UploadingFile File : FoundFiles) {
                             model.addRow(new Object[]{File.getName(), File.getSize(), ""});
                             this.Interface.GetMachine().getFoundFiles().addElement(File);
@@ -101,25 +102,24 @@ public class ChunkReceiver implements Runnable{
     private void SendRequest(){
         try {
             byte[] request = TypeConverter.serialize(Request);
-            DatagramPacket packet = new DatagramPacket(request, request.length, IPDest, port);
-            
+            DatagramPacket packet = new DatagramPacket(request, request.length, IPDest, DestPort);
+            System.out.println("request " + packet.getData().length + " = " + request.length);
             // (0) send message to other machines
             socket.send(packet);
             
             if (Request == 1) {
                 byte[] FileNameByte = TypeConverter.serialize(this.Interface.GettfSearch().getText());
-                packet = new DatagramPacket(FileNameByte, FileNameByte.length, IPDest, port);
-                System.out.println(Request);
+                packet = new DatagramPacket(FileNameByte, FileNameByte.length, IPDest, DestPort);
+                System.out.println("Filename : " + FileNameByte.length);
                 
                 // (1) sending file name to search
                 socket.send(packet);
-                System.out.println(Request);
                 
                 byte[] LocalIPByteArray = TypeConverter.serialize(this.Interface.GetMachine().getIPAddr());
-                packet = new DatagramPacket(LocalIPByteArray, LocalIPByteArray.length, IPDest, port);
+                packet = new DatagramPacket(LocalIPByteArray, LocalIPByteArray.length, IPDest, DestPort);
                 // (-1) sending local IP
                 socket.send(packet);
-                System.out.println(Request);
+                System.out.println("LocalIPByteArray " + LocalIPByteArray.length);
             }
             
             //System.out.println(Request);
