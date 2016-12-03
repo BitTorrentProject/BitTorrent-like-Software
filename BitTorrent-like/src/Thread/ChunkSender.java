@@ -6,6 +6,7 @@
 package Thread;
 
 import BusinessLogic.UploadingFile;
+import Converter.DataPartition;
 import Converter.TypeConverter;
 import GraphicInterface.MainInterface;
 import java.io.BufferedInputStream;
@@ -51,7 +52,7 @@ public class ChunkSender implements Runnable{
                 socket.receive(MessagePacket);
                 
                 int message = (int) TypeConverter.deserialize(MessagePacket.getData());
-                System.out.println(message);
+                
                 // a machine wants to search a file in your machine (message = 1)
                 if (message == 1) {
                     byte[] FileNameByteArray = new byte[1024];
@@ -70,12 +71,14 @@ public class ChunkSender implements Runnable{
                     // reply this message to confirm that I received the message
                     // (2)
                     byte[] reply = TypeConverter.serialize(message);
-                    DatagramPacket replyPacket = new DatagramPacket(reply, reply.length, (InetAddress) TypeConverter.deserialize(IpSrcPacket.getData()),DestPort);
-                    socket.send(replyPacket);
-                    
-                    // (3) send found files
-                    DatagramPacket FoundFilesPacket = new DatagramPacket(TypeConverter.serialize(FoundFiles), TypeConverter.serialize(FoundFiles).length, (InetAddress)TypeConverter.deserialize(IpSrcPacket.getData()),DestPort);
-                    socket.send(FoundFilesPacket);
+                    socket.send(new DatagramPacket(reply, reply.length, (InetAddress) TypeConverter.deserialize(IpSrcPacket.getData()),DestPort));
+                  
+                    Vector<byte[]> FoundFilesPacket = DataPartition.SeparateObjectByteArray(TypeConverter.serialize(FoundFiles));
+                    for (byte[] FileNameArray : FoundFilesPacket) {
+                        // (3) send found files
+                        socket.send(new DatagramPacket(FileNameArray, FileNameArray.length, (InetAddress)TypeConverter.deserialize(IpSrcPacket.getData()),DestPort));
+                    }
+                    socket.send(null);
                 }
             } catch (IOException ex) {
                 Logger.getLogger(ChunkSender.class.getName()).log(Level.SEVERE, null, ex);

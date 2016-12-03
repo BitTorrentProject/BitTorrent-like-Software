@@ -6,6 +6,7 @@
 package Thread;
 
 import BusinessLogic.UploadingFile;
+import Converter.DataPartition;
 import Converter.TypeConverter;
 import GraphicInterface.MainInterface;
 import java.io.BufferedInputStream;
@@ -65,23 +66,25 @@ public class ChunkReceiver implements Runnable{
                 
                 // the replied message is 0 : searching files
                 if (receivedMessage == 1) {
+                    // (3) receiving vector of found files
+                    Vector<byte[]> VectorObjectByteArray = new Vector<>();
+                    while (true) {
+                        // (3)
+                        socket.receive(packet);
+                        if (packet == null)
+                            break;
+                        VectorObjectByteArray.addElement(packet.getData());
+                    }
+                    
+                    // convert the VectorObjectByteArray to Vector<UploadingFiles 
+                    Vector<UploadingFile> FoundFiles = (Vector<UploadingFile>) TypeConverter.deserialize(DataPartition.Assemble(VectorObjectByteArray));
+                    
+                    // inserting item (Found files 'name) to table interface
                     DefaultTableModel model = (DefaultTableModel) this.Interface.GetTableDownloadProcess().getModel();
                     model.getDataVector().removeAllElements();
-                    Vector<UploadingFile> FoundFiles;
-
-                    while (true) {
-                        // (3) receiving Found files
-                        socket.receive(packet);
-                        
-                        if (packet.getData().length == 0)
-                            break;
-                        
-                        FoundFiles = (Vector<UploadingFile>) TypeConverter.deserialize(packet.getData());
-
-                        for (UploadingFile File : FoundFiles) {
-                            model.addRow(new Object[]{File.getName(), File.getSize(), ""});
-                            this.Interface.GetMachine().getFoundFiles().addElement(File);
-                        }
+                    for (UploadingFile File : FoundFiles) {
+                        model.addRow(new Object[]{File.getName(), File.getSize(), ""});
+                        this.Interface.GetMachine().getFoundFiles().addElement(File);
                     }
                     this.Interface.GetTableDownloadProcess().setModel(model);
                 }
