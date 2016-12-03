@@ -20,9 +20,7 @@ public class DataPartition {
         object.removeAllElements();
         
         int size =ObjectArray.length ;
-        
         int N=ObjectArray.length/1024;
-        
         // N là số block/packet
         // xử lý phần block nguyên
         for(int i=0;i<N;i++)
