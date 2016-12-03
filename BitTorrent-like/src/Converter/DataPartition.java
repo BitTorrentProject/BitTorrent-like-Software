@@ -19,7 +19,31 @@ public class DataPartition {
     public static Vector<byte[]> SeparateObjectByteArray(byte[] ObjectArray) {
         object.removeAllElements();
         
-        long size = ObjectArray.length;
+        int size =ObjectArray.length ;
+        
+        int N=ObjectArray.length/1024;
+        
+        // N là số block/packet
+        // xử lý phần block nguyên
+        for(int i=0;i<N;i++)
+        {
+            int destPos=i*1024;
+            byte[] packet = new byte[1024];
+            System.arraycopy(ObjectArray, destPos, packet, 0, 1024);
+            object.addElement(packet);
+        }
+        // xử lý phần block bị thiếu
+        if(size%1024!=0)
+        {
+            byte[] packet = new byte[1024]; 
+            int k=0;
+            for(int i = N*1024;i<size;i++)
+            {
+               packet[k++]=ObjectArray[i];
+            }
+            object.addElement(packet);
+        }
+        /*
         if (ObjectArray.length % 1024 == 0) {
             for (int i = 1; i <= size / 1024; i++) {
                 byte[] packet = new byte[1024];
@@ -63,7 +87,7 @@ public class DataPartition {
             }
             object.addElement(packet);
         }
-        
+        */
         return DataPartition.object;
     }
     
@@ -95,5 +119,7 @@ public class DataPartition {
         //String strCopied = (String)TypeConverter.deserialize(DataPartition.Assemble());
         
         //System.out.println("str = " + strCopied);
+        
+         
     }
 }
