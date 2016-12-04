@@ -5,6 +5,8 @@
  */
 package Converter;
 
+import BusinessLogic.UploadingFile;
+import java.io.File;
 import java.io.IOException;
 import java.util.Vector;
 
@@ -33,7 +35,7 @@ public class DataPartition {
         // xử lý phần block bị thiếu
         if(size%1024!=0)
         {
-            byte[] packet = new byte[1024]; 
+            byte[] packet = new byte[size%1024]; 
             int k=0;
             for(int i = N*1024;i<size;i++)
             {
@@ -41,51 +43,7 @@ public class DataPartition {
             }
             object.addElement(packet);
         }
-        /*
-        if (ObjectArray.length % 1024 == 0) {
-            for (int i = 1; i <= size / 1024; i++) {
-                byte[] packet = new byte[1024];
-                int k = 0;
-                for (int j = (int) ((i - 1) * (1024 + 1)); j <= i * (1024 + 1) - 1; j++) {
-                    if (k < packet.length) {
-                        packet[k] = ObjectArray[j];
-                    }
-                    k++;
-                }
-                object.addElement(packet);
-            }
-        }
-        else {
-            int i = 1;
-            int j = 0;
-            
-            for (i = 1; i <= size / (1024); i++) {
-                byte[] packet = new byte[1024];
-                int k = 0;
-                
-                for (j = (int) ((i - 1) * (1024 + 1)); j <= i * (1024 + 1) - 1; j++) {
-                    if (k < packet.length) {
-                        packet[k] = ObjectArray[j];
-                    }
-                    k++;
-                }
-                object.addElement(packet);
-            }
-            
-            // adding 1 byte left
-            double BytesLeft = ((double)(size)/ (1024)) - (int)(size / (1024));
-            byte[] packet = new byte[1024];
-            int k = 0;
-            while (j < size) {
-                if (k < packet.length) {
-                    packet[k] = ObjectArray[j];
-                }
-                k++;
-                j++;
-            }
-            object.addElement(packet);
-        }
-        */
+       
         return DataPartition.object;
     }
     
@@ -98,10 +56,8 @@ public class DataPartition {
         
         int j = 0;
         for (byte[] packet : VectorObjectByteArray) {
-            for (int i = 0; i < packet.length; i++) {
-                ObjectByteArray[j] = packet[i];
-                j++;
-            }
+            System.arraycopy(packet, 0, ObjectByteArray, j * 1024, packet.length);
+            
             j++;
         }
         
@@ -109,15 +65,33 @@ public class DataPartition {
     }
     
     public static void main(String args[]) throws IOException, ClassNotFoundException {
-        String str = "toan khung";
+        /*String str = "toan khung";
         
         byte[] strClone = TypeConverter.serialize((Object)str);
         DataPartition.SeparateObjectByteArray(strClone);
         
         //String strCopied = (String)TypeConverter.deserialize(DataPartition.Assemble());
         
-        //System.out.println("str = " + strCopied);
+        //System.out.println("str = " + strCopied);*/
         
-         
+        Vector<UploadingFile> UF = new Vector<UploadingFile>(0);
+        
+        new File("BitTorrent").mkdir();
+        File folder = new File("BitTorrent");
+        for (final File fileEntry : folder.listFiles()) {
+            if (!fileEntry.isDirectory() && !fileEntry.getName().endsWith(".torrent")) {
+                UploadingFile UploadedFile = new UploadingFile(fileEntry,0);
+                UF.addElement(UploadedFile);
+            }
+        }
+        
+        byte[] strClone = TypeConverter.serialize((Object)UF);
+        System.out.println("length = "+ strClone.length);
+        DataPartition.SeparateObjectByteArray(strClone);
+        
+        Vector<byte[]> copy = (Vector<byte[]>)object.clone();
+        Vector<UploadingFile> strCopied = (Vector<UploadingFile>)TypeConverter.deserialize(DataPartition.Assemble(copy));
+        
+        System.out.println(strClone.length + " str = " + strCopied.elementAt(0).getName());
     }
 }

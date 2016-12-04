@@ -78,7 +78,11 @@ public class ChunkSender implements Runnable{
                         // (3) send found files
                         socket.send(new DatagramPacket(FileNameArray, FileNameArray.length, (InetAddress)TypeConverter.deserialize(IpSrcPacket.getData()),DestPort));
                     }
-                    socket.send(null);
+                    
+                    // Ends transferring data
+                    byte[] Ending = new byte[1];
+                    Ending[0] = -10;
+                    socket.send(new DatagramPacket(Ending, Ending.length, (InetAddress)TypeConverter.deserialize(IpSrcPacket.getData()), DestPort));
                 }
             } catch (IOException ex) {
                 Logger.getLogger(ChunkSender.class.getName()).log(Level.SEVERE, null, ex);

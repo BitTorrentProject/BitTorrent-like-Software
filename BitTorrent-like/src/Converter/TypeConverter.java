@@ -20,7 +20,8 @@ import java.util.Vector;
  * @author admin
  */
 public class TypeConverter {
-
+    
+    // converting object to byte array
     public static byte[] serialize(Object obj) throws IOException {
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         ObjectOutputStream os = new ObjectOutputStream(out);
@@ -28,7 +29,8 @@ public class TypeConverter {
         os.close();
         return out.toByteArray();
     }
-
+    
+    //converting byte array to object
     public static Object deserialize(byte[] data) throws IOException, ClassNotFoundException {
         ByteArrayInputStream in = new ByteArrayInputStream(data);
         ObjectInputStream is = new ObjectInputStream(in);

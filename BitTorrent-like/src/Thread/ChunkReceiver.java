@@ -67,17 +67,20 @@ public class ChunkReceiver implements Runnable{
                 // the replied message is 0 : searching files
                 if (receivedMessage == 1) {
                     // (3) receiving vector of found files
-                    Vector<byte[]> VectorObjectByteArray = new Vector<>();
+                    Vector<byte[]> VectorObjectByteArray = new Vector<byte[]>();
+                    
                     while (true) {
                         // (3)
                         socket.receive(packet);
-                        if (packet == null)
+                        if (packet.getLength() == 1 && packet.getData()[0] == -10)
                             break;
                         VectorObjectByteArray.addElement(packet.getData());
+                        System.out.println(VectorObjectByteArray.size() +" sdasdsa " + packet.getLength());
                     }
                     
                     // convert the VectorObjectByteArray to Vector<UploadingFiles 
-                    Vector<UploadingFile> FoundFiles = (Vector<UploadingFile>) TypeConverter.deserialize(DataPartition.Assemble(VectorObjectByteArray));
+                    Vector<UploadingFile> FoundFiles = 
+                      (Vector<UploadingFile>) TypeConverter.deserialize(DataPartition.Assemble(VectorObjectByteArray));
                     
                     // inserting item (Found files 'name) to table interface
                     DefaultTableModel model = (DefaultTableModel) this.Interface.GetTableDownloadProcess().getModel();
