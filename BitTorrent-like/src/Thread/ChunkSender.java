@@ -72,17 +72,16 @@ public class ChunkSender implements Runnable{
                     // (2)
                     byte[] reply = TypeConverter.serialize(message);
                     socket.send(new DatagramPacket(reply, reply.length, (InetAddress) TypeConverter.deserialize(IpSrcPacket.getData()),DestPort));
-                  
-                    Vector<byte[]> FoundFilesPacket = DataPartition.SeparateObjectByteArray(TypeConverter.serialize(FoundFiles));
-                    for (byte[] FileNameArray : FoundFilesPacket) {
-                        // (3) send found files
-                        socket.send(new DatagramPacket(FileNameArray, FileNameArray.length, (InetAddress)TypeConverter.deserialize(IpSrcPacket.getData()),DestPort));
-                    }
                     
-                    // Ends transferring data
-                    byte[] Ending = new byte[1];
-                    Ending[0] = -10;
-                    socket.send(new DatagramPacket(Ending, Ending.length, (InetAddress)TypeConverter.deserialize(IpSrcPacket.getData()), DestPort));
+                    Vector<byte[]> FoundFilesPacket = DataPartition.SeparateObjectByteArray(TypeConverter.serialize(FoundFiles));
+                    
+                    // (3) sending packet length of found files
+                    socket.send(new DatagramPacket(TypeConverter.serialize(FoundFilesPacket.size()), TypeConverter.serialize(FoundFilesPacket.size()).length, (InetAddress)TypeConverter.deserialize(IpSrcPacket.getData()),DestPort));
+                    
+                    // (4) send found files
+                    for (byte[] Temp : FoundFilesPacket) {
+                        socket.send(new DatagramPacket(Temp, Temp.length, (InetAddress)TypeConverter.deserialize(IpSrcPacket.getData()),DestPort));
+                    }
                 }
             } catch (IOException ex) {
                 Logger.getLogger(ChunkSender.class.getName()).log(Level.SEVERE, null, ex);

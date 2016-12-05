@@ -66,23 +66,33 @@ public class ChunkReceiver implements Runnable{
                 
                 // the replied message is 0 : searching files
                 if (receivedMessage == 1) {
-                    // (3) receiving vector of found files
-                    Vector<byte[]> VectorObjectByteArray = new Vector<byte[]>();
+                    // (3) receiving packet size of data will be sent
+                    DatagramPacket sizeReceived = new DatagramPacket(new byte[1024], 1024);
+                    socket.receive(sizeReceived);
+                    int PacketLength = (int)TypeConverter.deserialize(sizeReceived.getData());
+                    System.out.println("size = " + PacketLength);
                     
-                    while (true) {
-                        // (3)
+                    // (4) receiving vector of found files
+                    Vector<byte[]> VectorObjectByteArray = new Vector<byte[]>();
+                    for (int i = 0; i < PacketLength; i++) {
                         socket.receive(packet);
-                        if (packet.getLength() == 1 && packet.getData()[0] == -10)
-                            break;
                         VectorObjectByteArray.addElement(packet.getData());
-                        System.out.println(VectorObjectByteArray.size() +" sdasdsa " + packet.getLength());
                     }
+                    
+                    /*int i = 0;
+                    for (byte b : VectorObjectByteArray.elementAt(0)) {
+                        System.out.println(i + " = " + (int)b);
+                        i++;
+                    }*/
                     
                     // convert the VectorObjectByteArray to Vector<UploadingFiles 
                     Vector<UploadingFile> FoundFiles = 
                       (Vector<UploadingFile>) TypeConverter.deserialize(DataPartition.Assemble(VectorObjectByteArray));
                     
+                    //this.thread.suspend();
+                    
                     // inserting item (Found files 'name) to table interface
+                    System.out.println("---------------------------------");
                     DefaultTableModel model = (DefaultTableModel) this.Interface.GetTableDownloadProcess().getModel();
                     model.getDataVector().removeAllElements();
                     for (UploadingFile File : FoundFiles) {
