@@ -12,6 +12,7 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 import javax.swing.ImageIcon;
 import BusinessLogic.UploadingFile;
+import Port.PortFinder;
 import Thread.ChunkReceiver;
 import Thread.ChunkSender;
 import java.awt.Color;
@@ -78,8 +79,8 @@ public class MainInterface extends javax.swing.JFrame implements ActionListener{
     
     JMenuItem miDownload=new JMenuItem("Download");
     
-    DatagramSocket socket1 = new DatagramSocket(9090);
-    DatagramSocket socket2 = new DatagramSocket(6060);
+    
+    DatagramSocket socket2 = new DatagramSocket(6060);               
     String Peers[];
     public MainInterface() throws FileNotFoundException, SocketException, UnknownHostException {
         initComponents();
@@ -114,8 +115,10 @@ public class MainInterface extends javax.swing.JFrame implements ActionListener{
             model.addRow(new Object[]{Peers[i], "", "Active"});
             InetAddress IPDest = InetAddress.getByName(Peers[i]);
         }
-
+        
+        //socket1.setReuseAddress(true);
         ChunkSender sender = new ChunkSender(this, socket2);
+        
         sender.start();
     }
     public void initPopupMenu()
@@ -574,9 +577,16 @@ public class MainInterface extends javax.swing.JFrame implements ActionListener{
                 return;
             }
             
+            // refresh the table
+            DefaultTableModel model = (DefaultTableModel) this.GetTableDownloadProcess().getModel();
+            model.getDataVector().removeAllElements();
+            this.GetTableDownloadProcess().setModel(model);
+            
             for (int i = 0; i < Peers.length; i++) {
                 try {
-                    ChunkReceiver receiver = new ChunkReceiver(Peers[i], this, socket1);
+                    int port = PortFinder.findFreePort();
+                    DatagramSocket socket1 = new DatagramSocket(port);
+                    ChunkReceiver receiver = new ChunkReceiver(Peers[i], this, socket1, port);
                     receiver.SetRequest(1);
                     receiver.start();
                 } catch (IOException ex) {

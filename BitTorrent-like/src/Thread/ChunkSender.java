@@ -31,14 +31,13 @@ import java.util.logging.Logger;
  */
 public class ChunkSender implements Runnable{
     private DatagramSocket socket;
-    private final int DestPort = 9090;
+    private int DestPort;
     private MainInterface Interface;
     protected Thread thread;
     
     public ChunkSender(MainInterface Interface, DatagramSocket sock) {
         thread = new Thread(this);
         this.Interface = Interface;
-        
         socket = sock;
     }
     
@@ -47,38 +46,39 @@ public class ChunkSender implements Runnable{
         while (true) {
             try {  
                 // (0) get message from a machine
-                byte[] MessageByte = new byte[1024];
-                DatagramPacket MessagePacket = new DatagramPacket(MessageByte, MessageByte.length);
-                socket.receive(MessagePacket);
+                DatagramPacket RequestPacket = new DatagramPacket(new byte[1024], 1024);
+                socket.receive(RequestPacket);
                 
-                int message = (int) TypeConverter.deserialize(MessagePacket.getData());
+                int message = (int) TypeConverter.deserialize(RequestPacket.getData());
                 
                 // a machine wants to search a file in your machine (message = 1)
                 if (message == 1) {
-                    byte[] FileNameByteArray = new byte[1024];
-                    DatagramPacket FileNamePacket = new DatagramPacket(FileNameByteArray, FileNameByteArray.length);
                     // (1) receive file's name to search
+                    DatagramPacket FileNamePacket = new DatagramPacket(new byte[1024], 1024);
                     socket.receive(FileNamePacket);
                     
                     // searching the file in local
-                    Vector<UploadingFile> FoundFiles = this.SearchFile((String)TypeConverter.deserialize(FileNamePacket.getData()));
+                    Vector<String> FoundFiles = this.SearchFile((String)TypeConverter.deserialize(FileNamePacket.getData()));
                     
-                    byte[] IPByteArray = new byte[1024];
-                    DatagramPacket IpSrcPacket = new DatagramPacket(IPByteArray, IPByteArray.length);
-                    // (-1) receive IP src
+                    // (2) receive IP src
+                    DatagramPacket IpSrcPacket = new DatagramPacket(new byte[1024], 1024);
                     socket.receive(IpSrcPacket);
                     
-                    // reply this message to confirm that I received the message
-                    // (2)
+                    // (3) receiving src port
+                    DatagramPacket PortSrcPacket = new DatagramPacket(new byte[1024], 1024);
+                    socket.receive(PortSrcPacket);
+                    DestPort = (int)TypeConverter.deserialize(PortSrcPacket.getData());
+               
+                    // (4) reply this message to confirm that I received the message
                     byte[] reply = TypeConverter.serialize(message);
                     socket.send(new DatagramPacket(reply, reply.length, (InetAddress) TypeConverter.deserialize(IpSrcPacket.getData()),DestPort));
                     
                     Vector<byte[]> FoundFilesPacket = DataPartition.SeparateObjectByteArray(TypeConverter.serialize(FoundFiles));
                     
-                    // (3) sending packet length of found files
+                    // (5) sending packet length of found files
                     socket.send(new DatagramPacket(TypeConverter.serialize(FoundFilesPacket.size()), TypeConverter.serialize(FoundFilesPacket.size()).length, (InetAddress)TypeConverter.deserialize(IpSrcPacket.getData()),DestPort));
                     
-                    // (4) send found files
+                    // (6) send found files
                     for (byte[] Temp : FoundFilesPacket) {
                         socket.send(new DatagramPacket(Temp, Temp.length, (InetAddress)TypeConverter.deserialize(IpSrcPacket.getData()),DestPort));
                     }
@@ -86,21 +86,23 @@ public class ChunkSender implements Runnable{
             } catch (IOException ex) {
                 Logger.getLogger(ChunkSender.class.getName()).log(Level.SEVERE, null, ex);
                 socket.close();
+                this.thread.interrupt();
             } catch (ClassNotFoundException ex) {
                 Logger.getLogger(ChunkSender.class.getName()).log(Level.SEVERE, null, ex);
                 socket.close();
+                this.thread.interrupt();
             }
         }
     }
     
-    private Vector<UploadingFile> SearchFile(String FileName) {
+    private Vector<String> SearchFile(String FileName) {
         File folder = new File("BitTorrent");
-        Vector<UploadingFile> FoundFiles = new Vector<>();
+        Vector<String> FoundFiles = new Vector<String>();
         
         for (final UploadingFile fileEntry : this.Interface.GetMachine().GetFiles()) {
             if (fileEntry.getName().matches("(.*)" + FileName + "(.*)")
                  && !fileEntry.getName().endsWith(".torrent")) {
-                FoundFiles.addElement(fileEntry);
+                FoundFiles.addElement(fileEntry.getName());
             }
         }
         

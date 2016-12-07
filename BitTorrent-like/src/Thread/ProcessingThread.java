@@ -20,10 +20,14 @@ import javax.swing.table.DefaultTableModel;
  */
 public class ProcessingThread extends ChunkReceiver implements Runnable{
     private Integer receivedMessage;
-    
-    public ProcessingThread(String IP, MainInterface Interface, DatagramSocket sock) throws IOException {
-        super(IP, Interface, sock);
+
+    public ProcessingThread(String IPNeighbor, MainInterface Interface, DatagramSocket sock, int LocalPort) throws IOException {
+        super(IPNeighbor, Interface, sock, LocalPort);
     }
+    
+    //public ProcessingThread(String IP, MainInterface Interface, DatagramSocket sock) throws IOException {
+        //super(IP, Interface, sock);
+    //}
     
     public void run(){
         /*try {
