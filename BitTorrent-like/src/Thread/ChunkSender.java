@@ -33,7 +33,7 @@ public class ChunkSender implements Runnable{
     private DatagramSocket socket;
     private int DestPort;
     private MainInterface Interface;
-    protected Thread thread;
+    private Thread thread;
     
     public ChunkSender(MainInterface Interface, DatagramSocket sock) {
         thread = new Thread(this);

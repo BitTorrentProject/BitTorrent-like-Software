@@ -31,7 +31,6 @@ import javax.swing.table.DefaultTableModel;
  */
 public class ChunkReceiver implements Runnable{
     protected DatagramSocket socket;
-    protected byte[] ReceivedData;
     protected final int DestPort = 6060;
     protected int SrcPort;
     protected int Request;
@@ -44,7 +43,6 @@ public class ChunkReceiver implements Runnable{
         this.Interface = Interface;
         socket = sock;
         SrcPort = LocalPort;
-        ReceivedData = new byte[1024];
         
         // destination IP
         IPDest = InetAddress.getByName(IPNeighbor);
@@ -57,6 +55,8 @@ public class ChunkReceiver implements Runnable{
         this.SendRequest();
 
         try {
+            byte[] ReceivedData = new byte[1024];
+            
             // (4) other machine reply and we catch the message
             DatagramPacket DataPacket = new DatagramPacket(ReceivedData, ReceivedData.length);
             socket.receive(DataPacket);
