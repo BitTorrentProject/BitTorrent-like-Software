@@ -12,6 +12,8 @@ import GraphicInterface.MainInterface;
 import java.io.BufferedInputStream;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
@@ -69,27 +71,60 @@ public class ChunkReceiver implements Runnable{
                 if (receivedMessage == 1) {
                     // (5) receiving packet size of vector of byte arrays
                     socket.receive(DataPacket);
-                    int PacketLength = (int)TypeConverter.deserialize(DataPacket.getData());
+                    long FileLength = (long)TypeConverter.deserialize(DataPacket.getData());
                     
-                    // (6) receiving vector of found files
-                    Vector<byte[]> VectorObjectByteArray = new Vector<byte[]>();
-                    for (int i = 0; i < PacketLength; i++) {
+                    // there is one file found
+                    if (FileLength >= 0) {
+                        // (6) receiving result from server : the file name to search, and the size
+                        // so we have found the file in system
                         socket.receive(DataPacket);
-                        VectorObjectByteArray.addElement(DataPacket.getData());
-                    }
-                    
-                    // convert the VectorObjectByteArray to Vector<String> 
-                    Vector<String> FoundFiles = 
-                      (Vector<String>) TypeConverter.deserialize(DataPartition.Assemble(VectorObjectByteArray));
-                    
-                    // inserting item (Found files 'name) to table interface
-                    System.out.println("---------------------------------");
-                    DefaultTableModel model = (DefaultTableModel) this.Interface.GetTableDownloadProcess().getModel();
-                    for (String File : FoundFiles) {
-                        model.addRow(new Object[]{File, "", ""});
+                        String fileName = (String)TypeConverter.deserialize(DataPacket.getData());
+                        
+                        // (7) receving file torrent of found file
+                        // and push it on vector
+                        socket.receive(DataPacket);
+                        this.Interface.getTorrents().addElement(DataPacket.getData());
+                        
+                        // inserting item (Found files 'name) to table interface
+                        System.out.println("---------------------------------");
+                        DefaultTableModel model = (DefaultTableModel) this.Interface.GetTableDownloadProcess().getModel();
+                        model.addRow(new Object[]{fileName, FileLength, ""});
                         //this.Interface.GetMachine().getFoundFiles().addElement(File);
+                        this.Interface.GetTableDownloadProcess().setModel(model);
+                        Integer result = Integer.parseInt(this.Interface.getLbNumberResult().getText()) + 1;
+                        this.Interface.getLbNumberResult().setText(result.toString());
                     }
-                    this.Interface.GetTableDownloadProcess().setModel(model);
+                }
+                // the replied message is 2 : sending torrent content of the file you want to download
+                else if (receivedMessage == 2) {
+                    // (8) receiving message informing if that machine has the file you want to download
+                    socket.receive(DataPacket);
+                    long message = (long)TypeConverter.deserialize(DataPacket.getData());
+                    
+                    // message , 0: file not found
+                    // message >= 0 : length of file you want to search
+                    // if the file you want to download is detected in that machine
+                    if (message >= 0) {
+                        // (9) receiving the packet containing IP of that machine
+                        socket.receive(DataPacket);
+                        InetAddress IPdest = (InetAddress)TypeConverter.deserialize(DataPacket.getData());
+                        this.Interface.AddrContainingFile.addElement(IPdest);
+                        
+                        // (10) receiving the name of file you want to download again.
+                        socket.receive(DataPacket);
+                        String fileName = (String)TypeConverter.deserialize(DataPacket.getData());
+                        
+                        // inserting file info to table
+                        System.out.println("---------------------------------");
+                        DefaultTableModel model = (DefaultTableModel) this.Interface.GetTableDownloadProcess().getModel();
+                        model.addRow(new Object[]{fileName, message, ""});
+                        this.Interface.GetTableDownloadProcess().setModel(model);
+                        Integer result = Integer.parseInt(this.Interface.getLbNumberResult().getText()) + 1;
+                        this.Interface.getLbNumberResult().setText(result.toString());
+                    }
+                    else {
+                        System.out.println("Error");
+                    }
                 }
             }
         } catch (IOException ex) {
@@ -98,6 +133,7 @@ public class ChunkReceiver implements Runnable{
             Logger.getLogger(ChunkReceiver.class.getName()).log(Level.SEVERE, null, ex);
         } finally {
             this.socket.close();
+            this.thread.interrupt();
         }
     }
 
@@ -105,7 +141,7 @@ public class ChunkReceiver implements Runnable{
         Request = message;
     }
     
-    private void SendRequest(){
+    protected void SendRequest(){
          try {
             // (0) send message to other machines
             DatagramPacket RequestPacket = new DatagramPacket(TypeConverter.serialize(Request), TypeConverter.serialize(Request).length, IPDest, DestPort);
@@ -115,6 +151,22 @@ public class ChunkReceiver implements Runnable{
                 // (1) sending file name to search
                 DatagramPacket FileNamePacket = new DatagramPacket(TypeConverter.serialize(this.Interface.GettfSearch().getText()), TypeConverter.serialize(this.Interface.GettfSearch().getText()).length, IPDest, DestPort);
                 socket.send(FileNamePacket);
+            }
+            else if (Request == 2) {
+                // (1') sending file name to search
+                DatagramPacket FileNamePacket = new DatagramPacket(TypeConverter.serialize(this.Interface.StaticFileTorrent.getName()), TypeConverter.serialize(this.Interface.StaticFileTorrent.getName()).length, IPDest, DestPort);
+                socket.send(FileNamePacket);
+                
+                // khai báo bảng byte = kích thước của con trỏ file
+                byte[] bytes = new byte[(int)this.Interface.StaticFileTorrent.length()];
+                String path = this.Interface.StaticFileTorrent.getPath();
+                FileInputStream fis=new FileInputStream(path);
+                fis.read(bytes);
+                fis.close();
+                
+                // (1) sending local torrent file content (byte array)
+                DatagramPacket TorrentBytePacket = new DatagramPacket(bytes, bytes.length, IPDest, DestPort);
+                socket.send(TorrentBytePacket);
             }
             
             // (2) sending local IP
@@ -131,6 +183,22 @@ public class ChunkReceiver implements Runnable{
         }
     }
     
+    private boolean CompareFileTorrent(File Torrent) throws IOException {
+        byte[] torrentArray = TypeConverter.serialize(Torrent);
+        
+        File folder = new File("BitTorrent");
+        File Temp = null;
+        File[] LocalFileArray = folder.listFiles();
+        for (File fileEntry : LocalFileArray) {
+           if (fileEntry.getName().equals(Torrent.getName())) {
+               Temp = fileEntry;
+               break;
+            }
+        }
+        
+        byte[] TempBytes = TypeConverter.serialize(Temp);
+        return (TempBytes.equals(TypeConverter.serialize(Torrent)));
+    }
     // starting the thread
     public void start() {
         thread.start();

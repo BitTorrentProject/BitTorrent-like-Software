@@ -13,16 +13,21 @@ import java.util.Vector;
  * @author admin
  */
 public class Chunk implements Serializable{
+
+    public String getContainingFileName() {
+        return ContainingFileName;
+    }
     private int ID;
-    private Vector<Machine> ContainingMachine;
+    private String ContainingFileName;
     private double Size;
     private byte[] Data;
     private Object HashValue;
     
-    public Chunk(int PacketID, double Size, byte[] bytes){
+    public Chunk(int PacketID, double Size, byte[] bytes, String FileName){
         ID = PacketID;
         this.Size = Size;
         this.Data = bytes.clone();
+        ContainingFileName = FileName;
     }
     public int getID() {
         return ID;

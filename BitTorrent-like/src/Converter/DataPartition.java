@@ -74,7 +74,7 @@ public class DataPartition {
         
         //System.out.println("str = " + strCopied);*/
         
-        Vector<UploadingFile> UF = new Vector<UploadingFile>(0);
+        /*Vector<UploadingFile> UF = new Vector<UploadingFile>(0);
         
         new File("BitTorrent").mkdir();
         File folder = new File("BitTorrent");
@@ -92,6 +92,14 @@ public class DataPartition {
         Vector<byte[]> copy = (Vector<byte[]>)object.clone();
         Vector<UploadingFile> strCopied = (Vector<UploadingFile>)TypeConverter.deserialize(DataPartition.Assemble(copy));
         
-        System.out.println(strClone.length + " str = " + strCopied.elementAt(0).getName());
+        //System.out.println(strClone.length + " str = " + strCopied.elementAt(0).getName());*/
+        
+        String str = "06-BGP.txt.torrent";
+        String st[] = str.split(".torrent");
+        
+        for (String s : st){
+            System.out.println(s);
+        }
+        System.out.println(st.length);
     }
 }

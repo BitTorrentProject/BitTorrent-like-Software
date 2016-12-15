@@ -1,4 +1,6 @@
 package GraphicInterface;
+
+import BusinessLogic.Chunk;
 import BusinessLogic.Machine;
 import com.sun.glass.events.KeyEvent;
 import java.awt.Dimension;
@@ -15,6 +17,8 @@ import BusinessLogic.UploadingFile;
 import Port.PortFinder;
 import Thread.ChunkReceiver;
 import Thread.ChunkSender;
+import Thread.ProcessingThread;
+import Thread.ThreadJoining;
 import java.awt.Color;
 import java.awt.Image;
 import java.awt.event.ActionEvent;
@@ -35,56 +39,70 @@ import java.io.InputStream;
 
 import java.net.DatagramSocket;
 import java.net.SocketException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Scanner;
+import java.util.Vector;
 
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.Icon;
+import javax.swing.JLabel;
 import javax.swing.JTable;
 import javax.swing.JTextField;
 import javax.swing.table.DefaultTableModel;
-
 
 /**
  *
  * @author admin
  */
-public class MainInterface extends javax.swing.JFrame implements ActionListener{
+public class MainInterface extends javax.swing.JFrame implements ActionListener {
+
+    public String[] getPeers() {
+        return Peers;
+    }
+
+    public Vector<byte[]> getTorrents() {
+        return torrents;
+    }
     /**
      * Creates new form MainInterface
      */
    // DefaultListModel listModelResultFile=new DefaultListModel();
-    
-    Object[] columnFileList={"FileName","Size","Status"};
-    DefaultTableModel tableModelFileList=new DefaultTableModel(columnFileList, 0);
-    
-    
-   Object[] columnDownloadProcess={"FileName","Size","Process"};
-   Object[][] g={{"4","5","9"}};
+
+    Object[] columnFileList = {"FileName", "Size", "Status"};
+    DefaultTableModel tableModelFileList = new DefaultTableModel(columnFileList, 0);
+
+    Object[] columnDownloadProcess = {"FileName", "Size", "Process"};
+    Object[][] g = {{"4", "5", "9"}};
    //DefaultTableModel tableModelDownloadProcess=new DefaultTableModel(g, columnFileList);
-    
-   Object[] columnInforPeerConnect={"IP","Host Name","Status"};
-   DefaultTableModel tableModelInforPeerConnect=new DefaultTableModel(columnInforPeerConnect, 0);
-    
-    
-    
+
+    Object[] columnInforPeerConnect = {"IP", "Host Name", "Status"};
+    DefaultTableModel tableModelInforPeerConnect = new DefaultTableModel(columnInforPeerConnect, 0);
+
     InetAddress addressIP;
-    String pathChooser="";
+    String pathChooser = "";
     Machine m = new Machine();
 
-    JPopupMenu fileListPopupMenu=new JPopupMenu();                 
-    JPopupMenu downloadProcessPopupMenu=new JPopupMenu();                 
-    
-    JMenuItem miOpen=new JMenuItem("Open");
-    JMenuItem miDelete=new JMenuItem("Delete");
-    JMenuItem miOpenLocation=new JMenuItem("Open Folder");
-    
-    
-    JMenuItem miDownload=new JMenuItem("Download");
-    
-    
-    DatagramSocket socket2 = new DatagramSocket(6060);               
+    JPopupMenu fileListPopupMenu = new JPopupMenu();
+    JPopupMenu downloadProcessPopupMenu = new JPopupMenu();
+
+    JMenuItem miOpen = new JMenuItem("Open");
+    JMenuItem miDelete = new JMenuItem("Delete");
+    JMenuItem miOpenLocation = new JMenuItem("Open Folder");
+
+    JMenuItem miDownload = new JMenuItem("Download");
+
+    DatagramSocket socket2 = new DatagramSocket(6060);
     String Peers[];
+
+    Vector<byte[]> torrents = new Vector<byte[]>();
+    public List<Chunk> Chunks;
+    public Vector<ProcessingThread> receivers = new Vector<>();
+
+    public File StaticFileTorrent;
+    public Vector<InetAddress> AddrContainingFile = new Vector<>();
+
     public MainInterface() throws FileNotFoundException, SocketException, UnknownHostException {
         initComponents();
         initPopupMenu();
@@ -93,93 +111,96 @@ public class MainInterface extends javax.swing.JFrame implements ActionListener{
         setTitle("BitTorrent");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         tfSearch.getParent().requestFocus();
-        lYourIP.setText("Your IP: "+getYourIP());
-        lYourHostName.setText("Your Host Name: "+getYourHostName());
-        this.loadFilesFromLocalBitTorrent();
+        lYourIP.setText("Your IP: " + getYourIP());
+        lYourHostName.setText("Your Host Name: " + getYourHostName());
+        this.loadFilesFromLocalBitTorrent(false);
         setResizable(false);
-      
-       tableFileList.setComponentPopupMenu(fileListPopupMenu);
-       tableDownloadProcess.setComponentPopupMenu(downloadProcessPopupMenu);
-       
-       //tableDownloadProcess.setModel(tableModelDownloadProcess);
-       tableInforPeerConnect.setModel(tableModelInforPeerConnect);
-       tableFileList.setModel(tableModelFileList);
-       
+
+        tableFileList.setComponentPopupMenu(fileListPopupMenu);
+        tableDownloadProcess.setComponentPopupMenu(downloadProcessPopupMenu);
+
+        //tableDownloadProcess.setModel(tableModelDownloadProcess);
+        tableInforPeerConnect.setModel(tableModelInforPeerConnect);
+        tableFileList.setModel(tableModelFileList);
+
        //tableFileList.setEnabled(true);
-       //tableModelFileList.
-  
-       
+        //tableModelFileList.
        //jLabel2.setIcon(new ImageIcon(new ImageIcon("src/Image/rsz_upfile.png").getImage().getScaledInstance(40, 40, Image.SCALE_DEFAULT)));
-       //btnUpFile.setIcon(new ImageIcon(new ImageIcon("src/Image/rsz_upfile.png").getImage().getScaledInstance(100, 100, Image.SCALE_DEFAULT)));
-      // btnDeleteFile.setIcon(new ImageIcon(new ImageIcon("src/Image/rsz_remove.png").getImage().getScaledInstance(100, 100, Image.SCALE_DEFAULT)));
-       Peers = ReadInfoEachMachine();
-       DefaultTableModel model = (DefaultTableModel) this.tableInforPeerConnect.getModel();
+        //btnUpFile.setIcon(new ImageIcon(new ImageIcon("src/Image/rsz_upfile.png").getImage().getScaledInstance(100, 100, Image.SCALE_DEFAULT)));
+        // btnDeleteFile.setIcon(new ImageIcon(new ImageIcon("src/Image/rsz_remove.png").getImage().getScaledInstance(100, 100, Image.SCALE_DEFAULT)));
+        Peers = ReadInfoEachMachine();
+        DefaultTableModel model = (DefaultTableModel) this.tableInforPeerConnect.getModel();
         for (int i = 0; i < Peers.length; i++) {
             model.addRow(new Object[]{Peers[i], "", "Active"});
             InetAddress IPDest = InetAddress.getByName(Peers[i]);
         }
-        
+
         //socket1.setReuseAddress(true);
         ChunkSender sender = new ChunkSender(this, socket2);
-        
+
         sender.start();
     }
-    public void initPopupMenu()
-    {
-        
+
+    public void initPopupMenu() {
+
         fileListPopupMenu.add(miOpen);
         fileListPopupMenu.add(miDelete);
         fileListPopupMenu.add(miOpenLocation);
         miOpen.addActionListener(this);
         miDelete.addActionListener(this);
         miOpenLocation.addActionListener(this);
-        
-        
+
         downloadProcessPopupMenu.add(miDownload);
         miDownload.addActionListener(this);
-        
-        
+
     }
+
     /**
      * This method is called from within the constructor to initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is always
      * regenerated by the Form Editor.
      */
-    
+
     public Machine GetMachine() {
         return this.m;
     }
-    
+
     public JTable GetTableDownloadProcess() {
         return this.tableDownloadProcess;
     }
-    
+
     public JTextField GettfSearch() {
         return this.tfSearch;
     }
-    private void loadFilesFromLocalBitTorrent()
-    {
+
+    public JLabel getLbNumberResult() {
+        return this.lbNumberResult;
+    }
+
+    private void loadFilesFromLocalBitTorrent(boolean CreateTorrent) {
         new File("BitTorrent").mkdir();
         File folder = new File("BitTorrent");
         for (final File fileEntry : folder.listFiles()) {
             if (!fileEntry.isDirectory()) {
                 // if the file does not contain extension .torrent
-                
+
                 if (!fileEntry.getName().endsWith(".torrent")) {
-                    UploadingFile UploadedFile = new UploadingFile(fileEntry,0);
+                    UploadingFile UploadedFile = new UploadingFile(fileEntry, 0);
                     m.AddFile(UploadedFile);
                     //tableModelProcessFile.addElement(UploadedFile.GetName());
-                    Object[] rowData={UploadedFile.getName(),RoundFileSize(UploadedFile.getSize()),"123"};
+                    Object[] rowData = {UploadedFile.getLocalFile().getName(), RoundFileSize(UploadedFile.getLocalFile().length()), "123"};
                     tableModelFileList.addRow(rowData);
                     //listModelProcessFile.addElement(UploadedFile.GetName() + "-----------------size: " + UploadedFile.GetSize() + "-----------------no of chunks: " + UploadedFile.GetChunks().size());
                     tableFileList.setModel(tableModelFileList);
-                    
+
                     // write file info into file.torrent
-                    try {
-                        UploadedFile.WriteFileInfoToTorrent();
-                    } catch (IOException ex) {
-                        String[] Name = UploadedFile.getName().split(".");
-                        JOptionPane.showMessageDialog(null, Name[0], "Erorr", JOptionPane.ERROR_MESSAGE);
+                    if (CreateTorrent == true) {
+                        try {
+                            UploadedFile.WriteFileInfoToTorrent();
+                        } catch (IOException ex) {
+                            String[] Name = UploadedFile.getLocalFile().getName().split(".");
+                            JOptionPane.showMessageDialog(null, Name[0], "Erorr", JOptionPane.ERROR_MESSAGE);
+                        }
                     }
                 }
             } else {
@@ -188,52 +209,47 @@ public class MainInterface extends javax.swing.JFrame implements ActionListener{
             }
         }
     }
-    
+
     private String[] ReadInfoEachMachine() throws FileNotFoundException {
         Scanner s = null;
         s = new Scanner(new BufferedReader(new FileReader("nodes.txt")));
 
         int nPeer = Integer.parseInt(s.next());
-        
+
         String PeerInfo[] = new String[nPeer];
         for (int i = 0; i < nPeer; i++) {
-            PeerInfo[i] = s.next(); 
+            PeerInfo[i] = s.next();
         }
-        
+
         return PeerInfo;
     }
-    public String getYourIP()
-    {
-        try
-        {
+
+    public String getYourIP() {
+        try {
             return InetAddress.getLocalHost().getHostAddress();
-        }
-    catch(Exception e)
-        {
+        } catch (Exception e) {
             e.printStackTrace();
         }
         return "Valid";
     }
-    public String getYourHostName()
-    {
-        try
-        {
+
+    public String getYourHostName() {
+        try {
             return InetAddress.getLocalHost().getHostName();
-        }
-    catch(Exception e)
-        {
+        } catch (Exception e) {
             e.printStackTrace();
         }
         return "Valid";
     }
-    
-     private void deleteFile()
-    {
+
+    private void deleteFile() {
         String fileName; // tên file sẽ xóa
-        int row=-1;
-        row=tableFileList.getSelectedRow();
-        if(row==-1)return;
-        fileName=tableModelFileList.getValueAt(row, 0).toString();
+        int row = -1;
+        row = tableFileList.getSelectedRow();
+        if (row == -1) {
+            return;
+        }
+        fileName = tableModelFileList.getValueAt(row, 0).toString();
         tableModelFileList.removeRow(row);
         tableFileList.setModel(tableModelFileList);
         File file = new File("BitTorrent//" + fileName);
@@ -245,12 +261,12 @@ public class MainInterface extends javax.swing.JFrame implements ActionListener{
             m.RemoveFileAt(row);
             JOptionPane.showMessageDialog(null, "File Deleted", "Message", JOptionPane.YES_OPTION);
         } else {
-            JOptionPane.showMessageDialog(null, "File Not Exist","Error",JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(null, "File Not Exist", "Error", JOptionPane.ERROR_MESSAGE);
 
         }
     }
-    private void openFileLocation()
-    {
+
+    private void openFileLocation() {
         File file = new File("BitTorrent");
         try {
             java.awt.Desktop.getDesktop().open(file);
@@ -258,8 +274,8 @@ public class MainInterface extends javax.swing.JFrame implements ActionListener{
             IOe.printStackTrace();
         }
     }
-    private void openFile()
-    {
+
+    private void openFile() {
         String fileName;
         int pos = -1;
         pos = tableFileList.getSelectedRow();
@@ -275,27 +291,63 @@ public class MainInterface extends javax.swing.JFrame implements ActionListener{
             e.printStackTrace();
         }
     }
+
     @Override
-    public void actionPerformed(ActionEvent e) 
-    {
-        if((JMenuItem)e.getSource()==miDelete)
+    public void actionPerformed(ActionEvent e) {
+        if ((JMenuItem) e.getSource() == miDelete) {
             deleteFile();
-        if((JMenuItem)e.getSource()==miOpen)
+        } else if ((JMenuItem) e.getSource() == miOpen) {
             openFile();
-        if((JMenuItem)e.getSource()==miOpenLocation)
+        } else if ((JMenuItem) e.getSource() == miOpenLocation) {
             openFileLocation();
-        if((JMenuItem)e.getSource()==miDownload)
-            JOptionPane.showMessageDialog(null, "Gọi hàm download");
+        } else if ((JMenuItem) e.getSource() == miDownload) {
+            // calculate no of chunks
+            //System.out.println(this.tableDownloadProcess.getModel().getValueAt(this.tableDownloadProcess.getSelectedRow(), 1));
+            long nChunks = (long) (this.tableDownloadProcess.getModel().getValueAt(this.tableDownloadProcess.getSelectedRow(), 1)) / (1024 * 1024);
+            if ((long) this.tableDownloadProcess.getModel().getValueAt(this.tableDownloadProcess.getSelectedRow(), 1) % (1024 * 1024) != 0) {
+                nChunks += 1;
+            }
+
+            Chunks = new ArrayList((int) nChunks);
+            receivers.removeAllElements();
+
+            for (int i = 0; i < nChunks; i++) {
+                Chunks.add(null);
+            }
+
+            // creating thread to download chunk from other machines
+            ProcessingThread[] threads = new ProcessingThread[(int) nChunks];
+            for (int i = 0; i < nChunks; i++) {
+                try {
+                    threads[i] = new ProcessingThread(null, this, null, 0);
+                    threads[i].setChunkID(i);
+                    threads[i].start();
+                } catch (IOException ex) {
+                    Logger.getLogger(MainInterface.class.getName()).log(Level.SEVERE, null, ex);
+                }
+            }
+
+            // wait for all receiver process to stop
+            // assemble the chunks downloaded into a file
+            ThreadJoining Killer = new ThreadJoining(this);
+            Killer.start();
+        }
     }
-    
-    public String RoundFileSize(long size)
-    {
-       // Double d;
-        if(size<1024) return Long.toString(size)+" Byte";
-        if(size<1024*1024) return String.format("%.2f", (double)size/1024)+" KB";
-        if(size<1024*1024*1024) return String.format("%.2f", (double)size/(1024.0*1024))+" MB";
+
+    public String RoundFileSize(long size) {
+        // Double d;
+        if (size < 1024) {
+            return Long.toString(size) + " Byte";
+        }
+        if (size < 1024 * 1024) {
+            return String.format("%.2f", (double) size / 1024) + " KB";
+        }
+        if (size < 1024 * 1024 * 1024) {
+            return String.format("%.2f", (double) size / (1024.0 * 1024)) + " MB";
+        }
         return "";
     }
+
     @SuppressWarnings("unchecked")
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
@@ -384,6 +436,7 @@ public class MainInterface extends javax.swing.JFrame implements ActionListener{
 
         btnDownLoadFile.setIcon(new javax.swing.ImageIcon(getClass().getResource("/Image/down.png"))); // NOI18N
         btnDownLoadFile.setText("Download");
+        btnDownLoadFile.setSelectedIcon(new javax.swing.ImageIcon(getClass().getResource("/Image/down.png"))); // NOI18N
         btnDownLoadFile.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 btnDownLoadFileActionPerformed(evt);
@@ -621,17 +674,19 @@ public class MainInterface extends javax.swing.JFrame implements ActionListener{
         pack();
     }// </editor-fold>//GEN-END:initComponents
 
-    private void jLabel5MouseClicked(java.awt.event.MouseEvent evt) {                                     
+    private void jLabel5MouseClicked(java.awt.event.MouseEvent evt) {
         openFileLocation();
-    }                           
+    }
 
     private void btnDeleteFileActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnDeleteFileActionPerformed
         // TODO add your handling code here:
         String fileName; // tên file sẽ xóa
-        int pos=-1;
-        pos=tableFileList.getSelectedRow();
-        if(pos==-1)return;
-        fileName=tableModelFileList.getValueAt(pos, 0).toString();
+        int pos = -1;
+        pos = tableFileList.getSelectedRow();
+        if (pos == -1) {
+            return;
+        }
+        fileName = tableModelFileList.getValueAt(pos, 0).toString();
         tableModelFileList.removeRow(pos);
         tableFileList.setModel(tableModelFileList);
         File file = new File("BitTorrent//" + fileName);
@@ -643,14 +698,14 @@ public class MainInterface extends javax.swing.JFrame implements ActionListener{
             m.RemoveFileAt(pos);
             JOptionPane.showMessageDialog(null, "File Deleted", "Message", JOptionPane.YES_OPTION);
         } else {
-            JOptionPane.showMessageDialog(null, "File Not Exist","Error",JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(null, "File Not Exist", "Error", JOptionPane.ERROR_MESSAGE);
 
         }
     }//GEN-LAST:event_btnDeleteFileActionPerformed
 
     private void listProcessFileMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_listProcessFileMouseClicked
         // TODO add your handling code here:
-        
+
     }//GEN-LAST:event_listProcessFileMouseClicked
 
     private void jLabel5MouseExited(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jLabel5MouseExited
@@ -663,21 +718,22 @@ public class MainInterface extends javax.swing.JFrame implements ActionListener{
         jLabel5.setForeground(Color.BLUE);
     }//GEN-LAST:event_jLabel5MouseEntered
 
-    
 
     private void tfSearchKeyPressed(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_tfSearchKeyPressed
-        if(evt.getKeyCode()==KeyEvent.VK_ENTER)
-        {
-            if(tfSearch.getText().equals("")) {
+        if (evt.getKeyCode() == KeyEvent.VK_ENTER) {
+            if (tfSearch.getText().equals("")) {
                 JOptionPane.showMessageDialog(null, "Chưa nhập tên tìm kiếm");
                 return;
             }
-            
+
+            this.lbNumberResult.setText("0");
+
             // refresh the table
+            this.torrents.removeAllElements();
             DefaultTableModel model = (DefaultTableModel) this.GetTableDownloadProcess().getModel();
             model.getDataVector().removeAllElements();
             this.GetTableDownloadProcess().setModel(model);
-            
+
             for (int i = 0; i < Peers.length; i++) {
                 try {
                     int port = PortFinder.findFreePort();
@@ -705,25 +761,28 @@ public class MainInterface extends javax.swing.JFrame implements ActionListener{
     private void btnUpFileActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnUpFileActionPerformed
         // TODO add your handling code here:
         new File("BitTorrent").mkdir();
-        JFileChooser chooser=new JFileChooser(pathChooser);
+        JFileChooser chooser = new JFileChooser(pathChooser);
 
         chooser.showOpenDialog(null);
-        File file=chooser.getSelectedFile();
-        if(file==null)return;
-        pathChooser=file.getPath();
-        String fileName=file.getName();
+        File file = chooser.getSelectedFile();
+        if (file == null) {
+            return;
+        }
+        pathChooser = file.getPath();
+        String fileName = file.getName();
         try {
-            if(fileName!=null)
-            JOptionPane.showMessageDialog(null, "File Uploaded", "Message", JOptionPane.INFORMATION_MESSAGE);
+            if (fileName != null) {
+                JOptionPane.showMessageDialog(null, "File Uploaded", "Message", JOptionPane.INFORMATION_MESSAGE);
+            }
         } catch (Exception e) {
             JOptionPane.showMessageDialog(null, "Failed to upload", "Message", JOptionPane.ERROR_MESSAGE);
             return;
         }
 
-        UploadingFile upLoadingFile=new UploadingFile(file,1);
+        UploadingFile upLoadingFile = new UploadingFile(file, 1);
 
         m.AddFile(upLoadingFile);
-        Object[] rowData={upLoadingFile.getName(),RoundFileSize(upLoadingFile.getSize())};
+        Object[] rowData = {upLoadingFile.getLocalFile().getName(), RoundFileSize(upLoadingFile.getLocalFile().length())};
         tableModelFileList.addRow(rowData);
         tableFileList.setModel(tableModelFileList);
 
@@ -737,63 +796,76 @@ public class MainInterface extends javax.swing.JFrame implements ActionListener{
 
     private void btnAddFileBittorrentActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnAddFileBittorrentActionPerformed
         // TODO add your handling code here:
-        JFileChooser chooser=new JFileChooser();
+        JFileChooser chooser = new JFileChooser();
         // người dùng đã chọn file
-        if(chooser.showOpenDialog(null)==JFileChooser.APPROVE_OPTION)
-        {
-            File file=chooser.getSelectedFile();
-            String path=file.getPath();
-            if(!path.endsWith(".torrent"))
-            {
+        if (chooser.showOpenDialog(null) == JFileChooser.APPROVE_OPTION) {
+            StaticFileTorrent = chooser.getSelectedFile();
+            if (!StaticFileTorrent.getName().endsWith(".torrent")) {
                 JOptionPane.showMessageDialog(null, "Error format file, must *.torrent");
                 return;
             }
+
+            DefaultTableModel model = (DefaultTableModel) this.GetTableDownloadProcess().getModel();
+            model.getDataVector().removeAllElements();
+            this.GetTableDownloadProcess().setModel(model);
+            this.lbNumberResult.setText("0");
+            this.AddrContainingFile.removeAllElements();
             try {
-                // khai báo bảng byte = kích thước của con trỏ file
-                int lenght=(int)file.length();
-                byte[] b=new byte[lenght];
-                FileInputStream fis=new FileInputStream(path);
-                //int lenght=fis.read(b)
-                fis.close();
-                if(b.equals(b)) // so sánh 2 mảng byte
-                {
-                    System.out.println("2 mảng byte = nhau gọi xử lý típ theo");
-                }              
+                // broadcasting torrent content to other machines
+                for (int i = 0; i < Peers.length; i++) {
+                    int port = PortFinder.findFreePort();
+                    DatagramSocket socket1 = new DatagramSocket(port);
+                    ChunkReceiver receiver = new ChunkReceiver(Peers[i], this, socket1, port);
+                    receiver.SetRequest(2);
+                    receiver.start();
+                }
             } catch (FileNotFoundException ex) {
                 Logger.getLogger(MainInterface.class.getName()).log(Level.SEVERE, null, ex);
             } catch (IOException ex) {
                 Logger.getLogger(MainInterface.class.getName()).log(Level.SEVERE, null, ex);
-            } 
+            }
         }
     }//GEN-LAST:event_btnAddFileBittorrentActionPerformed
 
     private void btnDownLoadFileActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnDownLoadFileActionPerformed
-        // TODO add your handling code here:
-        if(Integer.valueOf(lbNumberResult.getText())==0)
-        {
-             JOptionPane.showMessageDialog(null, "Not File To Down");
-             return;
+        // calculate no of chunks
+        //System.out.println(this.tableDownloadProcess.getModel().getValueAt(this.tableDownloadProcess.getSelectedRow(), 1));
+        long nChunks = (long) (this.tableDownloadProcess.getModel().getValueAt(this.tableDownloadProcess.getSelectedRow(), 1)) / (1024 * 1024);
+        if ((long) this.tableDownloadProcess.getModel().getValueAt(this.tableDownloadProcess.getSelectedRow(), 1) % (1024 * 1024) != 0) {
+            nChunks += 1;
         }
-        JFileChooser chooser=new JFileChooser();
-        if(chooser.showSaveDialog(null)==JFileChooser.APPROVE_OPTION)
-        {
-            // người dùng dã chọn file, ta phải ghi đè dữ liệu lên
-            // ghi đè data
-            System.out.println("ghi file vao máy tính");
+
+        Chunks = new ArrayList((int) nChunks);
+        receivers.removeAllElements();
+
+        for (int i = 0; i < nChunks; i++) {
+            Chunks.add(null);
         }
-        else
-        {
-            // người dùn ko chọn file nào
-            // ko ghi đè
+
+        // creating thread to download chunk from other machines
+        ProcessingThread[] threads = new ProcessingThread[(int) nChunks];
+        for (int i = 0; i < nChunks; i++) {
+            try {
+                threads[i] = new ProcessingThread(null, this, null, 0);
+                threads[i].setChunkID(i);
+                threads[i].start();
+            } catch (IOException ex) {
+                Logger.getLogger(MainInterface.class.getName()).log(Level.SEVERE, null, ex);
+            }
         }
+
+        // wait for all receiver process to stop
+        // assemble the chunks downloaded into a file
+        ThreadJoining Killer = new ThreadJoining(this);
+        Killer.start();
     }//GEN-LAST:event_btnDownLoadFileActionPerformed
 
-     public void actionPerform(ActionEvent e) {
+    public void actionPerform(ActionEvent e) {
         if ((JMenuItem) e.getSource() == miOpen) {
             System.out.println("bạn chọn open");
         }
     }
-                          
+
     /**
      * @param args the command line arguments
      */
@@ -833,7 +905,7 @@ public class MainInterface extends javax.swing.JFrame implements ActionListener{
                 } catch (UnknownHostException ex) {
                     Logger.getLogger(MainInterface.class.getName()).log(Level.SEVERE, null, ex);
                 }
-                
+
             }
         });
     }
@@ -863,5 +935,5 @@ public class MainInterface extends javax.swing.JFrame implements ActionListener{
     private javax.swing.JTable tableInforPeerConnect;
     private javax.swing.JTextField tfSearch;
     // End of variables declaration//GEN-END:variables
-   
+
 }

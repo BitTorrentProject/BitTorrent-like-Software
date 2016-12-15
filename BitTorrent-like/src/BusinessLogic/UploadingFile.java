@@ -5,9 +5,11 @@
  */
 package BusinessLogic;
 
+import Converter.DataPartition;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -21,6 +23,7 @@ import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.Hashtable;
 import java.util.List;
+import java.util.Vector;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -29,15 +32,42 @@ import java.util.logging.Logger;
  * @author admin
  */
 public class UploadingFile  implements Serializable{
-    private String FileName;
+    //private String FileName;
     private List<Chunk> Chunks = new ArrayList();;
+    private File localFile;
+    //private long Size;
     
-    private long Size;
-    
+    public UploadingFile(List<Chunk> Chunks) throws IOException {
+        FileOutputStream fos = null;
+        try {
+            this.Chunks = Chunks;
+            Vector<byte[]> vector = new Vector<byte[]>();
+            for (Chunk c : Chunks){
+                vector.addElement(c.getData());
+            }   
+            byte[] bytes = DataPartition.Assemble(vector);
+            fos = new FileOutputStream("Bittorrent//"  +  Chunks.get(0).getContainingFileName());
+            fos.write(bytes);
+            fos.close();
+            
+            localFile = new File("Bittorrent//"  +  Chunks.get(0).getContainingFileName());
+            
+        } catch (FileNotFoundException ex) {
+            Logger.getLogger(UploadingFile.class.getName()).log(Level.SEVERE, null, ex);
+        } finally {
+            try {
+                fos.close();
+            } catch (IOException ex) {
+                Logger.getLogger(UploadingFile.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
+        
+    }
     public UploadingFile(File f, int request) {
         if (f.exists() && f.isFile()) {
-            Size = f.length();
-            FileName = f.getName();
+            //Size = f.length();
+            //FileName = f.getName();
+            localFile = f;
             
             // copying file to folder BitTorrent
             Path p = Paths.get(f.getAbsolutePath());
@@ -51,16 +81,13 @@ public class UploadingFile  implements Serializable{
             }
             
             // devide file into chunks
-            this.DevideFileIntoChunks(p);
+            this.DevideFileIntoChunks(f);
         }
     }
     
     //--------------------------Get methods--------------------
-    public String getName(){
-        return FileName;
-    }
-    public long getSize() {
-        return Size;
+    public File getLocalFile() {
+        return localFile;
     }
     public List<Chunk> getChunks() {
         return Chunks;
@@ -81,18 +108,21 @@ public class UploadingFile  implements Serializable{
     }   
    
     //------------------------File dividing method------------------------------
-    private void DevideFileIntoChunks(Path p) {
+    private void DevideFileIntoChunks(File file) {
         byte[] fileArray = null;
         Hashtable balance =new Hashtable();
         
         try {
+            Path p = Paths.get(file.getAbsolutePath());
             fileArray = Files.readAllBytes(p);
+            
         } catch (IOException ex) {
             Logger.getLogger(UploadingFile.class.getName()).log(Level.SEVERE, null, ex);
         }
 
         // deviding file into chunks
         // 
+        long Size = localFile.length();
         if (Size % (1024 * 1024) == 0) {
             for (int i = 1; i <= Size / (1024 * 1024); i++) {
                 byte[] ChunkBytes = new byte[1024 * 1024];
@@ -103,7 +133,7 @@ public class UploadingFile  implements Serializable{
                     }
                     k++;
                 }
-                Chunk NewChunk = new Chunk(i, 1, ChunkBytes);
+                Chunk NewChunk = new Chunk(i - 1, 1, ChunkBytes, file.getName());
                 
                 balance.put(NewChunk.getID(), NewChunk.getData());
                 NewChunk.setHashValue((Object)balance.get(NewChunk.getID()));
@@ -121,7 +151,7 @@ public class UploadingFile  implements Serializable{
                     }
                     k++;
                 }
-                Chunk NewChunk = new Chunk(i, 1, ChunkBytes);
+                Chunk NewChunk = new Chunk(i - 1, 1, ChunkBytes, file.getName());
 
                 balance.put(NewChunk.getID(), NewChunk.getData());
                 NewChunk.setHashValue((Object)balance.get(NewChunk.getID()));
@@ -139,7 +169,7 @@ public class UploadingFile  implements Serializable{
                 k++;
                 j++;
             }
-            Chunk NewChunk = new Chunk(i, MByteLeft, ChunkBytes);
+            Chunk NewChunk = new Chunk(i - 1, MByteLeft, ChunkBytes, file.getName());
             
             balance.put(NewChunk.getID(), NewChunk.getData());
             NewChunk.setHashValue((Object)balance.get(NewChunk.getID()));
@@ -148,11 +178,11 @@ public class UploadingFile  implements Serializable{
     }
     
     public void WriteFileInfoToTorrent() throws IOException{
-        File file = new File("BitTorrent//" + this.FileName + ".torrent");
+        File file = new File("BitTorrent//" + this.localFile.getName() + ".torrent");
         FileOutputStream fos = new FileOutputStream(file);
  
 	BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(fos));
-        bw.write(FileName + "-----------Size: " + (double)this.Size/(1024*1024) + "MB \n");
+        bw.write(this.localFile.getName() + "-----------Size: " + (double)this.localFile.length()/(1024*1024) + "MB \n");
         bw.newLine();
         
         //Hashtable balance =new Hashtable();
