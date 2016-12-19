@@ -332,6 +332,8 @@ public class MainInterface extends javax.swing.JFrame implements ActionListener 
         btnAddFileBittorrent = new javax.swing.JButton();
         jLabel2 = new javax.swing.JLabel();
         lbNumberResult = new javax.swing.JLabel();
+        jLabel3 = new javax.swing.JLabel();
+        lbFileName = new javax.swing.JLabel();
         jPanel2 = new javax.swing.JPanel();
         jLabel6 = new javax.swing.JLabel();
         jScrollPane3 = new javax.swing.JScrollPane();
@@ -431,6 +433,11 @@ public class MainInterface extends javax.swing.JFrame implements ActionListener 
         lbNumberResult.setFont(new java.awt.Font("Tahoma", 0, 12)); // NOI18N
         lbNumberResult.setText("0");
 
+        jLabel3.setFont(new java.awt.Font("Tahoma", 0, 12)); // NOI18N
+        jLabel3.setText("File name:");
+
+        lbFileName.setFont(new java.awt.Font("Tahoma", 0, 12)); // NOI18N
+
         javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
         jPanel1.setLayout(jPanel1Layout);
         jPanel1Layout.setHorizontalGroup(
@@ -439,22 +446,31 @@ public class MainInterface extends javax.swing.JFrame implements ActionListener 
                 .addContainerGap()
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(jPanel1Layout.createSequentialGroup()
-                        .addComponent(btnAddFileBittorrent, javax.swing.GroupLayout.PREFERRED_SIZE, 190, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addGap(18, 18, 18)
-                        .addComponent(btnDownLoadFile, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-                    .addGroup(jPanel1Layout.createSequentialGroup()
                         .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addComponent(jLabel1)
                             .addComponent(jScrollPane4, javax.swing.GroupLayout.PREFERRED_SIZE, 411, javax.swing.GroupLayout.PREFERRED_SIZE)
                             .addGroup(jPanel1Layout.createSequentialGroup()
                                 .addComponent(tfSearch, javax.swing.GroupLayout.PREFERRED_SIZE, 250, javax.swing.GroupLayout.PREFERRED_SIZE)
                                 .addGap(18, 18, 18)
-                                .addComponent(jLabel5, javax.swing.GroupLayout.PREFERRED_SIZE, 154, javax.swing.GroupLayout.PREFERRED_SIZE))
+                                .addComponent(jLabel5, javax.swing.GroupLayout.PREFERRED_SIZE, 154, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                        .addGap(0, 0, Short.MAX_VALUE))
+                    .addGroup(jPanel1Layout.createSequentialGroup()
+                        .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
+                            .addGroup(javax.swing.GroupLayout.Alignment.LEADING, jPanel1Layout.createSequentialGroup()
+                                .addComponent(jLabel3)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(lbFileName, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                            .addComponent(btnAddFileBittorrent, javax.swing.GroupLayout.PREFERRED_SIZE, 190, javax.swing.GroupLayout.PREFERRED_SIZE))
+                        .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addGroup(jPanel1Layout.createSequentialGroup()
+                                .addGap(18, 18, 18)
+                                .addComponent(btnDownLoadFile, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel1Layout.createSequentialGroup()
+                                .addGap(162, 162, 162)
                                 .addComponent(jLabel2)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                                .addComponent(lbNumberResult)))
-                        .addGap(0, 0, Short.MAX_VALUE)))
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(lbNumberResult)
+                                .addGap(24, 24, 24)))))
                 .addContainerGap())
         );
         jPanel1Layout.setVerticalGroup(
@@ -467,7 +483,9 @@ public class MainInterface extends javax.swing.JFrame implements ActionListener 
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jLabel2)
-                    .addComponent(lbNumberResult))
+                    .addComponent(lbNumberResult)
+                    .addComponent(jLabel3)
+                    .addComponent(lbFileName, javax.swing.GroupLayout.PREFERRED_SIZE, 15, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addGap(32, 32, 32)
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(tfSearch, javax.swing.GroupLayout.PREFERRED_SIZE, 30, javax.swing.GroupLayout.PREFERRED_SIZE)
@@ -790,11 +808,12 @@ public class MainInterface extends javax.swing.JFrame implements ActionListener 
         // người dùng đã chọn file
         if (chooser.showOpenDialog(null) == JFileChooser.APPROVE_OPTION) {
             StaticFileTorrent = chooser.getSelectedFile();
-            if (!StaticFileTorrent.getName().endsWith(".torrent")) {
+            String fileName=StaticFileTorrent.getName();
+            if (!fileName.endsWith(".torrent")) {
                 JOptionPane.showMessageDialog(null, "Error format file, must *.torrent");
                 return;
             }
-            
+            lbFileName.setText(fileName.substring(0, fileName.length()-8));
             // wait for all receivers to stop
             for (ChunkReceiver r : chunkReceiver) {
                 try {
@@ -935,6 +954,7 @@ public class MainInterface extends javax.swing.JFrame implements ActionListener 
     private javax.swing.JButton btnUpFile;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel2;
+    private javax.swing.JLabel jLabel3;
     private javax.swing.JLabel jLabel4;
     private javax.swing.JLabel jLabel5;
     private javax.swing.JLabel jLabel6;
@@ -946,6 +966,7 @@ public class MainInterface extends javax.swing.JFrame implements ActionListener 
     private javax.swing.JScrollPane jScrollPane4;
     private javax.swing.JLabel lYourHostName;
     private javax.swing.JLabel lYourIP;
+    private javax.swing.JLabel lbFileName;
     private javax.swing.JLabel lbNumberResult;
     private javax.swing.JPopupMenu puMenu1;
     private javax.swing.JTable tableDownloadProcess;
