@@ -22,6 +22,8 @@ import java.io.IOException;
 import javax.swing.JMenuItem;
 import javax.swing.JPopupMenu;
 import java.awt.event.ActionListener;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.io.BufferedReader;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
@@ -94,7 +96,18 @@ public class MainInterface extends javax.swing.JFrame implements ActionListener 
         setVisible(true);
         setLocation(100, 100);
         setTitle("BitTorrent");
-        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
+        this.addWindowListener(new WindowAdapter() {
+                public void windowClosing(WindowEvent e) {
+                    int hoi = JOptionPane.showConfirmDialog(null, "Bạn có muốn thoát chương trình không?",
+                            "Cảnh Báo", JOptionPane.YES_NO_OPTION);
+                    if (hoi == JOptionPane.YES_OPTION) {
+                        System.out.println("gọi hàm gì đó đây");
+                        System.exit(0);
+                    }
+                }
+            });
+        
         tfSearch.getParent().requestFocus();
         lYourIP.setText("Your IP: " + getYourIP());
         lYourHostName.setText("Your Host Name: " + getYourHostName());
@@ -333,6 +346,11 @@ public class MainInterface extends javax.swing.JFrame implements ActionListener 
         tableFileList = new javax.swing.JTable();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
+        addWindowListener(new java.awt.event.WindowAdapter() {
+            public void windowClosing(java.awt.event.WindowEvent evt) {
+                formWindowClosing(evt);
+            }
+        });
 
         jPanel1.setBorder(javax.swing.BorderFactory.createEtchedBorder());
 
@@ -854,6 +872,11 @@ public class MainInterface extends javax.swing.JFrame implements ActionListener 
         ThreadJoining Killer = new ThreadJoining(this);
         Killer.start();
     }//GEN-LAST:event_btnDownLoadFileActionPerformed
+
+    private void formWindowClosing(java.awt.event.WindowEvent evt) {//GEN-FIRST:event_formWindowClosing
+        // TODO add your handling code here:
+       // System.out.println("chương trình đang tắt");
+    }//GEN-LAST:event_formWindowClosing
 
     public void actionPerform(ActionEvent e) {
         if ((JMenuItem) e.getSource() == miOpen) {
