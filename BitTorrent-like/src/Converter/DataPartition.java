@@ -5,8 +5,6 @@
  */
 package Converter;
 
-import BusinessLogic.UploadingFile;
-import java.io.File;
 import java.io.IOException;
 import java.util.Vector;
 
@@ -15,49 +13,46 @@ import java.util.Vector;
  * @author admin
  */
 public class DataPartition {
-    private static Vector<byte[]> object = new Vector<>();
-    private static byte[] ObjectByteArray;
-    
-    public static Vector<byte[]> SeparateObjectByteArray(byte[] ObjectArray) {
-        object.removeAllElements();
+    public static Vector<byte[]> SeparateObjectByteArray(byte[] ObjectArray, int BlockSize) {
+        Vector<byte[]> object = new Vector<>();
         
         int size =ObjectArray.length ;
-        int N=ObjectArray.length/1024;
+        int N=ObjectArray.length/BlockSize;
         // N là số block/packet
         // xử lý phần block nguyên
         for(int i=0;i<N;i++)
         {
-            int destPos=i*1024;
-            byte[] packet = new byte[1024];
-            System.arraycopy(ObjectArray, destPos, packet, 0, 1024);
+            int destPos=i*BlockSize;
+            byte[] packet = new byte[BlockSize];
+            System.arraycopy(ObjectArray, destPos, packet, 0, BlockSize);
             object.addElement(packet);
         }
         // xử lý phần block bị thiếu
-        if(size%1024!=0)
+        if(size % BlockSize!=0)
         {
-            byte[] packet = new byte[size%1024]; 
+            byte[] packet = new byte[size%BlockSize]; 
             int k=0;
-            for(int i = N*1024;i<size;i++)
+            for(int i = N*BlockSize;i<size;i++)
             {
                packet[k++]=ObjectArray[i];
             }
             object.addElement(packet);
         }
        
-        return DataPartition.object;
+        return object;
     }
     
-    public static byte[] Assemble(Vector<byte[]> VectorObjectByteArray) {
+    public static byte[] Assemble(Vector<byte[]> VectorObjectByteArray, int BlockSize) {
         long ObjectSize = 0;
         for (byte[] packet : VectorObjectByteArray) {
             ObjectSize += packet.length;
         }
-        ObjectByteArray = new byte[(int)ObjectSize];
+        
+        byte[] ObjectByteArray = new byte[(int)ObjectSize];
         
         int j = 0;
         for (byte[] packet : VectorObjectByteArray) {
-            System.arraycopy(packet, 0, ObjectByteArray, j * 1024, packet.length);
-            
+            System.arraycopy(packet, 0, ObjectByteArray, j * BlockSize, packet.length);
             j++;
         }
         

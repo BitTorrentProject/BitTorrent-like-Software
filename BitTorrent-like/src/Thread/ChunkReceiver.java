@@ -5,26 +5,16 @@
  */
 package Thread;
 
-import BusinessLogic.UploadingFile;
-import Converter.DataPartition;
 import Converter.TypeConverter;
 import GraphicInterface.MainInterface;
-import java.io.BufferedInputStream;
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
-import java.net.SocketException;
-import java.util.Vector;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.swing.JOptionPane;
 import javax.swing.table.DefaultTableModel;
 
 /**
@@ -32,6 +22,10 @@ import javax.swing.table.DefaultTableModel;
  * @author admin
  */
 public class ChunkReceiver implements Runnable{
+
+    public Thread getThread() {
+        return thread;
+    }
     protected DatagramSocket socket;
     protected final int DestPort = 6060;
     protected int SrcPort;
@@ -63,7 +57,7 @@ public class ChunkReceiver implements Runnable{
             DatagramPacket DataPacket = new DatagramPacket(ReceivedData, ReceivedData.length);
             socket.receive(DataPacket);
             
-            synchronized(DataPacket) {
+            synchronized(this.Interface) {
                 // convert data in received packet to int
                 int receivedMessage = (int) TypeConverter.deserialize(DataPacket.getData());
                 
@@ -80,11 +74,6 @@ public class ChunkReceiver implements Runnable{
                         socket.receive(DataPacket);
                         String fileName = (String)TypeConverter.deserialize(DataPacket.getData());
                         
-                        // (7) receving file torrent of found file
-                        // and push it on vector
-                        socket.receive(DataPacket);
-                        this.Interface.getTorrents().addElement(DataPacket.getData());
-                        
                         // inserting item (Found files 'name) to table interface
                         System.out.println("---------------------------------");
                         DefaultTableModel model = (DefaultTableModel) this.Interface.GetTableDownloadProcess().getModel();
@@ -97,7 +86,7 @@ public class ChunkReceiver implements Runnable{
                 }
                 // the replied message is 2 : sending torrent content of the file you want to download
                 else if (receivedMessage == 2) {
-                    // (8) receiving message informing if that machine has the file you want to download
+                    // (7) receiving message informing if that machine has the file you want to download
                     socket.receive(DataPacket);
                     long message = (long)TypeConverter.deserialize(DataPacket.getData());
                     
@@ -105,12 +94,12 @@ public class ChunkReceiver implements Runnable{
                     // message >= 0 : length of file you want to search
                     // if the file you want to download is detected in that machine
                     if (message >= 0) {
-                        // (9) receiving the packet containing IP of that machine
+                        // (8) receiving the packet containing IP of that machine
                         socket.receive(DataPacket);
                         InetAddress IPdest = (InetAddress)TypeConverter.deserialize(DataPacket.getData());
                         this.Interface.AddrContainingFile.addElement(IPdest);
                         
-                        // (10) receiving the name of file you want to download again.
+                        // (9) receiving the name of file you want to download again.
                         socket.receive(DataPacket);
                         String fileName = (String)TypeConverter.deserialize(DataPacket.getData());
                         
@@ -125,6 +114,9 @@ public class ChunkReceiver implements Runnable{
                     else {
                         System.out.println("Error");
                     }
+                }
+                else if (receivedMessage == 3) {
+                    
                 }
             }
         } catch (IOException ex) {
@@ -147,11 +139,13 @@ public class ChunkReceiver implements Runnable{
             DatagramPacket RequestPacket = new DatagramPacket(TypeConverter.serialize(Request), TypeConverter.serialize(Request).length, IPDest, DestPort);
             socket.send(RequestPacket);
             
+            // searching
             if (Request == 1) {
                 // (1) sending file name to search
                 DatagramPacket FileNamePacket = new DatagramPacket(TypeConverter.serialize(this.Interface.GettfSearch().getText()), TypeConverter.serialize(this.Interface.GettfSearch().getText()).length, IPDest, DestPort);
                 socket.send(FileNamePacket);
             }
+            // adding torrent
             else if (Request == 2) {
                 // (1') sending file name to search
                 DatagramPacket FileNamePacket = new DatagramPacket(TypeConverter.serialize(this.Interface.StaticFileTorrent.getName()), TypeConverter.serialize(this.Interface.StaticFileTorrent.getName()).length, IPDest, DestPort);
@@ -167,6 +161,14 @@ public class ChunkReceiver implements Runnable{
                 // (1) sending local torrent file content (byte array)
                 DatagramPacket TorrentBytePacket = new DatagramPacket(bytes, bytes.length, IPDest, DestPort);
                 socket.send(TorrentBytePacket);
+            }
+            // downloading
+            else if (Request == 3) {
+                String name = (String)this.Interface.GetTableDownloadProcess().getModel().getValueAt(0, 0);
+                
+                // (1) sending file name to download
+                DatagramPacket FileNamePacket = new DatagramPacket(TypeConverter.serialize(name), TypeConverter.serialize(name).length, IPDest, DestPort);
+                socket.send(FileNamePacket);
             }
             
             // (2) sending local IP

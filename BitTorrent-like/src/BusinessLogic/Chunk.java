@@ -6,22 +6,16 @@
 package BusinessLogic;
 
 import java.io.Serializable;
-import java.util.Vector;
 
 /**
  *
  * @author admin
  */
 public class Chunk implements Serializable{
-
-    public String getContainingFileName() {
-        return ContainingFileName;
-    }
     private int ID;
     private String ContainingFileName;
     private double Size;
     private byte[] Data;
-    private Object HashValue;
     
     public Chunk(int PacketID, double Size, byte[] bytes, String FileName){
         ID = PacketID;
@@ -38,11 +32,7 @@ public class Chunk implements Serializable{
     public byte [] getData(){
         return Data;
     }
-    public void setHashValue(Object HashValue) {
-        this.HashValue = HashValue;
-    }
-
-    public Object getHashValue() {
-        return HashValue;
+    public String getContainingFileName() {
+        return ContainingFileName;
     }
 }

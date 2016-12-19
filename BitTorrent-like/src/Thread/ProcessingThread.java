@@ -6,24 +6,18 @@
 package Thread;
 
 import BusinessLogic.Chunk;
-import BusinessLogic.UploadingFile;
+import Converter.DataPartition;
 import Converter.TypeConverter;
 import GraphicInterface.MainInterface;
 import Port.PortFinder;
-import java.io.DataInputStream;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
-import java.net.InetAddress;
 import java.net.SocketException;
-import java.net.UnknownHostException;
 import java.util.Random;
 import java.util.Vector;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.swing.table.DefaultTableModel;
 
 /**
  *
@@ -49,8 +43,8 @@ public class ProcessingThread extends ChunkReceiver{
             int port = PortFinder.findFreePort();
             this.socket = new DatagramSocket(port);
             this.SrcPort = port;
-            
-            this.SetRequest(2);
+            System.out.println(port);
+            this.SetRequest(3);
             
             System.out.println(this.IPDest);
             // starting send-receive data
@@ -85,46 +79,64 @@ public class ProcessingThread extends ChunkReceiver{
             // sending request
             this.SendRequest();
             
-            // (8) sending chunk ID packet
-            DatagramPacket ChunkIDPacket  = new DatagramPacket(TypeConverter.serialize(this.ChunkID), TypeConverter.serialize(this.ChunkID).length, this.IPDest, this.DestPort);
-            socket.send(ChunkIDPacket);
+            // (10) sending object ID you want to download
+            DatagramPacket ObectIDPacket = new DatagramPacket(TypeConverter.serialize(this.ChunkID), TypeConverter.serialize(this.ChunkID).length, IPDest, DestPort);
+            socket.send(ObectIDPacket);
             
-            // get selected row
-            int selectedRow = this.Interface.GetTableDownloadProcess().getSelectedRow();
-            
-            // reading data in file torrent
-            byte[] bytes= this.Interface.getTorrents().elementAt(selectedRow);
-            
-            // (9) sending file torrent content
-            DatagramPacket TorrentArray = new DatagramPacket(bytes, bytes.length, this.IPDest, this.DestPort);
-            socket.send(TorrentArray);
-            
-            // (10) receiving Chunk Packet size (size of byte array in 1 chunk)
+            // (11) receiving Data Packet size (size of byte array in 1 chunk)
             byte[] receivedData = new byte [1024];
-            socket.receive(new DatagramPacket(receivedData, receivedData.length, this.IPDest, this.DestPort));
+            socket.receive(new DatagramPacket(receivedData, receivedData.length));
             int PacketSize = (int)TypeConverter.deserialize(receivedData);
             
-            // (11) receiving Packet Chunk
             // if the file is found at server machine (PacketSize != -1)
             if (PacketSize >= 0) {
-                receivedData = new byte[PacketSize];
-                socket.receive(new DatagramPacket(receivedData, receivedData.length, this.IPDest, this.DestPort));
-                this.ReceivedPacket = (DataPacket) TypeConverter.deserialize(receivedData);
+                System.out.println(this.IPDest + " length = " + PacketSize);
+                // calculating no of frames will be received
+                int nFrames = PacketSize / (65507);
+                if (PacketSize % (65507) != 0)
+                    nFrames += 1;
                 
-                // create the torrent file for the file you want to download
-                FileOutputStream fos = new FileOutputStream("Bittorrent//" + (String)this.Interface.GetTableDownloadProcess().getModel().getValueAt(selectedRow, 0) + ".torrent");
-                fos.write(bytes);
-                fos.close();
+                Vector<byte[]> FrameVector = new Vector<byte[]>();
+                
+                if (PacketSize % (65507) != 0) {
+                    // (12) receiving chunk (one chunk have more than 1 frame)
+                    for (int i = 0; i < nFrames - 1; i++) {
+                        receivedData = new byte[65507];
+                        socket.receive(new DatagramPacket(receivedData, receivedData.length));
+                        FrameVector.addElement(receivedData);
+                    }
+                    
+                    System.out.println(this.IPDest + " = " + receivedData.length);
+                    receivedData = new byte[PacketSize % (65507)];
+                    socket.receive(new DatagramPacket(receivedData, receivedData.length));
+                    FrameVector.addElement(receivedData);
+                    System.out.println(this.IPDest + " = " + receivedData.length);
+                }
+                else {
+                    // (12) receiving chunk (one chunk have more than 1 frame)
+                    for (int i = 0; i < nFrames; i++) {
+                        receivedData = new byte[65507];
+                        socket.receive(new DatagramPacket(receivedData, receivedData.length));
+                        FrameVector.addElement(receivedData);
+                        //System.out.println(this.IPDest + " = " + receivedData.length);
+                    }
+                }
+                double ChunkSize = 0;
+                
+                if (PacketSize % (1024 * 1024) == 0) 
+                    ChunkSize = 1;
+                else
+                    ChunkSize = ((double)(PacketSize)/ (1024 * 1024)) - (int)(PacketSize / (1024 * 1024));
+                
+                byte[] ChunkArray = DataPartition.Assemble(FrameVector,65507);
+                System.out.println(" ******* " + ChunkArray.length);
+                String FileName = (String)this.Interface.GetTableDownloadProcess().getModel().getValueAt(0, 0);
                 
                 //set chunk
-                this.Interface.Chunks.set(ChunkID, (Chunk)this.ReceivedPacket.getData());
+                this.Interface.Chunks.set(ChunkID, new Chunk(this.ChunkID, ChunkSize, ChunkArray, FileName));
             }
             else {
-                ProcessingThread t = new ProcessingThread(null, this.Interface, null, 0);
-                t.ChunkID = this.ChunkID;
-                this.Interface.receivers.addElement(t);
-                System.out.println("new ");
-                t.start();
+                System.out.println("Error");
             }
         } catch (IOException ex) {
             Logger.getLogger(ProcessingThread.class.getName()).log(Level.SEVERE, null, ex);
@@ -135,21 +147,11 @@ public class ProcessingThread extends ChunkReceiver{
     }
     
     private void setIPDest() {
-        try {
-            int j = ProcessingThread.randInt(0, this.Interface.getPeers().length - 1);
-            String[] IPDestList = this.Interface.getPeers();
-            this.IPDest = InetAddress.getByName(IPDestList[j]);
-        } catch (UnknownHostException ex) {
-            Logger.getLogger(ProcessingThread.class.getName()).log(Level.SEVERE, null, ex);
-            this.thread.interrupt();
-        }
+        int j = ProcessingThread.randInt(0, this.Interface.AddrContainingFile.size() - 1);
+        this.IPDest = this.Interface.AddrContainingFile.elementAt(j);
     }
     
     public void setChunkID(int ChunkID) {
         this.ChunkID = ChunkID;
-    }
-    
-    public Thread getThread() {
-        return thread;
     }
 }

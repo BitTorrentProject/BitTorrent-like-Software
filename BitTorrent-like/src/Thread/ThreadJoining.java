@@ -7,6 +7,7 @@ package Thread;
 
 import BusinessLogic.UploadingFile;
 import GraphicInterface.MainInterface;
+import java.io.File;
 import java.io.IOException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -25,24 +26,27 @@ public class ThreadJoining implements Runnable{
     
     @Override
     public void run() {
-        /*for (ProcessingThread thread : this.Interface.receivers) {
-            try {
-                thread.getThread().join();
-            } catch (InterruptedException ex) {
-                Logger.getLogger(ThreadJoining.class.getName()).log(Level.SEVERE, null, ex);
-            }
-        }*/
-        
-        while (this.check(this.Interface.Chunks.size() - 1) == false){
-            
-        }
-        
         try {
+            for (ProcessingThread thread : this.Interface.receivers) {
+                thread.getThread().join();
+            }
+            
             // create file downloaded at local
-            UploadingFile file  = new UploadingFile(this.Interface.Chunks);
-            this.Interface.GetMachine().AddFile(file);
-        } catch (IOException ex) {
+            UploadingFile DownloadedFile  = new UploadingFile(this.Interface.Chunks);
+            this.Interface.GetMachine().AddFile(DownloadedFile);
+            
+            // Writing file torrent
+            File BittorrentFile = new File("BitTorrent//" + this.Interface.StaticFileTorrent.getName());
+            UploadingFile.copyFileUsingChannel(this.Interface.StaticFileTorrent, BittorrentFile);
+            
+        } catch (InterruptedException ex) {
             Logger.getLogger(ThreadJoining.class.getName()).log(Level.SEVERE, null, ex);
+
+        }catch (IOException ex) {
+            Logger.getLogger(ThreadJoining.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        finally {
+            this.t.interrupt();
         }
     }
     

@@ -5,15 +5,11 @@
  */
 package Converter;
 
-import BusinessLogic.Chunk;
-import BusinessLogic.Machine;
-import GraphicInterface.MainInterface;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-import java.util.Vector;
 
 /**
  *
@@ -40,16 +36,7 @@ public class TypeConverter {
     }
     
     public static void main (String arg[]) throws IOException, ClassNotFoundException {
-        MainInterface Interface = new MainInterface();
         
-        
-        byte[] b = TypeConverter.serialize((Object)Interface.GetMachine());
-        
-        Machine m = (Machine)TypeConverter.deserialize(b);
-        
-        for (int i = 0; i < m.GetFiles().size();i++)
-            //System.out.println(m.GetFiles().elementAt(i).getName());
-        
-        System.out.println(m.getIPAddr().toString());
     }
+    
 }

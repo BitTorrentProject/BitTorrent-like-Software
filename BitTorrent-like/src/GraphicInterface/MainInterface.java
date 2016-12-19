@@ -3,16 +3,12 @@ package GraphicInterface;
 import BusinessLogic.Chunk;
 import BusinessLogic.Machine;
 import com.sun.glass.events.KeyEvent;
-import java.awt.Dimension;
-import java.awt.Graphics;
 import java.io.File;
-import javax.swing.DefaultListModel;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
-import javax.swing.ImageIcon;
 import BusinessLogic.UploadingFile;
 import Port.PortFinder;
 import Thread.ChunkReceiver;
@@ -20,22 +16,15 @@ import Thread.ChunkSender;
 import Thread.ProcessingThread;
 import Thread.ThreadJoining;
 import java.awt.Color;
-import java.awt.Image;
 import java.awt.event.ActionEvent;
-import java.awt.event.InputEvent;
-import java.awt.event.MouseEvent;
 import java.io.IOException;
 
-import javax.swing.JMenu;
 import javax.swing.JMenuItem;
 import javax.swing.JPopupMenu;
 import java.awt.event.ActionListener;
-import java.awt.event.MouseListener;
 import java.io.BufferedReader;
-import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
-import java.io.InputStream;
 
 import java.net.DatagramSocket;
 import java.net.SocketException;
@@ -46,7 +35,6 @@ import java.util.Vector;
 
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.swing.Icon;
 import javax.swing.JLabel;
 import javax.swing.JTable;
 import javax.swing.JTextField;
@@ -61,10 +49,7 @@ public class MainInterface extends javax.swing.JFrame implements ActionListener 
     public String[] getPeers() {
         return Peers;
     }
-
-    public Vector<byte[]> getTorrents() {
-        return torrents;
-    }
+    
     /**
      * Creates new form MainInterface
      */
@@ -96,10 +81,10 @@ public class MainInterface extends javax.swing.JFrame implements ActionListener 
     DatagramSocket socket2 = new DatagramSocket(6060);
     String Peers[];
 
-    Vector<byte[]> torrents = new Vector<byte[]>();
+    //Vector<byte[]> torrents = new Vector<byte[]>();
     public List<Chunk> Chunks;
     public Vector<ProcessingThread> receivers = new Vector<>();
-
+    private Vector<ChunkReceiver> chunkReceiver = new Vector<>();
     public File StaticFileTorrent;
     public Vector<InetAddress> AddrContainingFile = new Vector<>();
 
@@ -188,7 +173,7 @@ public class MainInterface extends javax.swing.JFrame implements ActionListener 
                     UploadingFile UploadedFile = new UploadingFile(fileEntry, 0);
                     m.AddFile(UploadedFile);
                     //tableModelProcessFile.addElement(UploadedFile.GetName());
-                    Object[] rowData = {UploadedFile.getLocalFile().getName(), RoundFileSize(UploadedFile.getLocalFile().length()), "123"};
+                    Object[] rowData = {UploadedFile.getLocalFile().getName(), RoundFileSize(UploadedFile.getLocalFile().length()), "available"};
                     tableModelFileList.addRow(rowData);
                     //listModelProcessFile.addElement(UploadedFile.GetName() + "-----------------size: " + UploadedFile.GetSize() + "-----------------no of chunks: " + UploadedFile.GetChunks().size());
                     tableFileList.setModel(tableModelFileList);
@@ -301,36 +286,7 @@ public class MainInterface extends javax.swing.JFrame implements ActionListener 
         } else if ((JMenuItem) e.getSource() == miOpenLocation) {
             openFileLocation();
         } else if ((JMenuItem) e.getSource() == miDownload) {
-            // calculate no of chunks
-            //System.out.println(this.tableDownloadProcess.getModel().getValueAt(this.tableDownloadProcess.getSelectedRow(), 1));
-            long nChunks = (long) (this.tableDownloadProcess.getModel().getValueAt(this.tableDownloadProcess.getSelectedRow(), 1)) / (1024 * 1024);
-            if ((long) this.tableDownloadProcess.getModel().getValueAt(this.tableDownloadProcess.getSelectedRow(), 1) % (1024 * 1024) != 0) {
-                nChunks += 1;
-            }
-
-            Chunks = new ArrayList((int) nChunks);
-            receivers.removeAllElements();
-
-            for (int i = 0; i < nChunks; i++) {
-                Chunks.add(null);
-            }
-
-            // creating thread to download chunk from other machines
-            ProcessingThread[] threads = new ProcessingThread[(int) nChunks];
-            for (int i = 0; i < nChunks; i++) {
-                try {
-                    threads[i] = new ProcessingThread(null, this, null, 0);
-                    threads[i].setChunkID(i);
-                    threads[i].start();
-                } catch (IOException ex) {
-                    Logger.getLogger(MainInterface.class.getName()).log(Level.SEVERE, null, ex);
-                }
-            }
-
-            // wait for all receiver process to stop
-            // assemble the chunks downloaded into a file
-            ThreadJoining Killer = new ThreadJoining(this);
-            Killer.start();
+            
         }
     }
 
@@ -721,15 +677,27 @@ public class MainInterface extends javax.swing.JFrame implements ActionListener 
 
     private void tfSearchKeyPressed(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_tfSearchKeyPressed
         if (evt.getKeyCode() == KeyEvent.VK_ENTER) {
+            // wait for all receivers to stop
+            for (ChunkReceiver r : chunkReceiver) {
+                try {
+                    r.getThread().join();
+                } catch (InterruptedException ex) {
+                    Logger.getLogger(MainInterface.class.getName()).log(Level.SEVERE, null, ex);
+                }
+            }
+            
             if (tfSearch.getText().equals("")) {
                 JOptionPane.showMessageDialog(null, "Chưa nhập tên tìm kiếm");
                 return;
             }
-
+            
+            // release all thread receivers in vector chunkReceiver
+            chunkReceiver.removeAllElements();
+            
+            // set text to label lbNumberResult
             this.lbNumberResult.setText("0");
 
             // refresh the table
-            this.torrents.removeAllElements();
             DefaultTableModel model = (DefaultTableModel) this.GetTableDownloadProcess().getModel();
             model.getDataVector().removeAllElements();
             this.GetTableDownloadProcess().setModel(model);
@@ -741,6 +709,7 @@ public class MainInterface extends javax.swing.JFrame implements ActionListener 
                     ChunkReceiver receiver = new ChunkReceiver(Peers[i], this, socket1, port);
                     receiver.SetRequest(1);
                     receiver.start();
+                    this.chunkReceiver.addElement(receiver);
                 } catch (IOException ex) {
                     Logger.getLogger(MainInterface.class.getName()).log(Level.SEVERE, null, ex);
                 }
@@ -788,6 +757,9 @@ public class MainInterface extends javax.swing.JFrame implements ActionListener 
 
         // write file info into file.torrent
         try {
+            File torrent = new File("BitTorrent//" + upLoadingFile.getLocalFile().getName() + ".torrent");
+            if (torrent.exists())
+                return;
             upLoadingFile.WriteFileInfoToTorrent();
         } catch (IOException ex) {
             Logger.getLogger(MainInterface.class.getName()).log(Level.SEVERE, null, ex);
@@ -804,12 +776,25 @@ public class MainInterface extends javax.swing.JFrame implements ActionListener 
                 JOptionPane.showMessageDialog(null, "Error format file, must *.torrent");
                 return;
             }
-
+            
+            // wait for all receivers to stop
+            for (ChunkReceiver r : chunkReceiver) {
+                try {
+                    r.getThread().join();
+                } catch (InterruptedException ex) {
+                    Logger.getLogger(MainInterface.class.getName()).log(Level.SEVERE, null, ex);
+                }
+            }
+            
             DefaultTableModel model = (DefaultTableModel) this.GetTableDownloadProcess().getModel();
             model.getDataVector().removeAllElements();
             this.GetTableDownloadProcess().setModel(model);
             this.lbNumberResult.setText("0");
             this.AddrContainingFile.removeAllElements();
+            
+            // release elements int chunkReceiver vector
+            this.chunkReceiver.removeAllElements();
+            
             try {
                 // broadcasting torrent content to other machines
                 for (int i = 0; i < Peers.length; i++) {
@@ -818,6 +803,7 @@ public class MainInterface extends javax.swing.JFrame implements ActionListener 
                     ChunkReceiver receiver = new ChunkReceiver(Peers[i], this, socket1, port);
                     receiver.SetRequest(2);
                     receiver.start();
+                    this.chunkReceiver.addElement(receiver);
                 }
             } catch (FileNotFoundException ex) {
                 Logger.getLogger(MainInterface.class.getName()).log(Level.SEVERE, null, ex);
@@ -828,13 +814,23 @@ public class MainInterface extends javax.swing.JFrame implements ActionListener 
     }//GEN-LAST:event_btnAddFileBittorrentActionPerformed
 
     private void btnDownLoadFileActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnDownLoadFileActionPerformed
+        // wait for all receivers to stop
+        for (ChunkReceiver r : chunkReceiver) {
+            try {
+                r.getThread().join();
+            } catch (InterruptedException ex) {
+                Logger.getLogger(MainInterface.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
+        this.chunkReceiver.removeAllElements();
+        
         // calculate no of chunks
         //System.out.println(this.tableDownloadProcess.getModel().getValueAt(this.tableDownloadProcess.getSelectedRow(), 1));
-        long nChunks = (long) (this.tableDownloadProcess.getModel().getValueAt(this.tableDownloadProcess.getSelectedRow(), 1)) / (1024 * 1024);
-        if ((long) this.tableDownloadProcess.getModel().getValueAt(this.tableDownloadProcess.getSelectedRow(), 1) % (1024 * 1024) != 0) {
+        long nChunks = (long) (this.tableDownloadProcess.getModel().getValueAt(0, 1)) / (1024 * 1024);
+        if ((long) this.tableDownloadProcess.getModel().getValueAt(0, 1) % (1024 * 1024) != 0) {
             nChunks += 1;
         }
-
+        
         Chunks = new ArrayList((int) nChunks);
         receivers.removeAllElements();
 
@@ -843,12 +839,11 @@ public class MainInterface extends javax.swing.JFrame implements ActionListener 
         }
 
         // creating thread to download chunk from other machines
-        ProcessingThread[] threads = new ProcessingThread[(int) nChunks];
         for (int i = 0; i < nChunks; i++) {
             try {
-                threads[i] = new ProcessingThread(null, this, null, 0);
-                threads[i].setChunkID(i);
-                threads[i].start();
+                ProcessingThread thread = new ProcessingThread(null, this, null, 0);
+                thread.setChunkID(i);
+                thread.start();
             } catch (IOException ex) {
                 Logger.getLogger(MainInterface.class.getName()).log(Level.SEVERE, null, ex);
             }

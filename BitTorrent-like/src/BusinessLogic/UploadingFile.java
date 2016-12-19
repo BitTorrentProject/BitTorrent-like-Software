@@ -11,7 +11,6 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.Serializable;
@@ -19,7 +18,6 @@ import java.nio.channels.FileChannel;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.Hashtable;
 import java.util.List;
@@ -45,12 +43,11 @@ public class UploadingFile  implements Serializable{
             for (Chunk c : Chunks){
                 vector.addElement(c.getData());
             }   
-            byte[] bytes = DataPartition.Assemble(vector);
-            fos = new FileOutputStream("Bittorrent//"  +  Chunks.get(0).getContainingFileName());
+            byte[] bytes = DataPartition.Assemble(vector, 1024 * 1024);
+            fos = new FileOutputStream("BitTorrent//"  +  Chunks.get(0).getContainingFileName());
             fos.write(bytes);
-            fos.close();
             
-            localFile = new File("Bittorrent//"  +  Chunks.get(0).getContainingFileName());
+            localFile = new File("BitTorrent//"  +  Chunks.get(0).getContainingFileName());
             
         } catch (FileNotFoundException ex) {
             Logger.getLogger(UploadingFile.class.getName()).log(Level.SEVERE, null, ex);
@@ -81,7 +78,7 @@ public class UploadingFile  implements Serializable{
             }
             
             // devide file into chunks
-            this.DevideFileIntoChunks(f);
+            this.DevideFileIntoChunks(f, 1024 * 1024);
         }
     }
     
@@ -94,7 +91,7 @@ public class UploadingFile  implements Serializable{
     }
     
     //---------------------------File functions methods--------------------------
-    private void copyFileUsingChannel(File source, File dest) throws IOException {
+    public static void copyFileUsingChannel(File source, File dest) throws IOException {
       FileChannel sourceChannel = null;
       FileChannel destChannel = null;
       try {
@@ -108,9 +105,8 @@ public class UploadingFile  implements Serializable{
     }   
    
     //------------------------File dividing method------------------------------
-    private void DevideFileIntoChunks(File file) {
+    private void DevideFileIntoChunks(File file, int BlockSize) {
         byte[] fileArray = null;
-        Hashtable balance =new Hashtable();
         
         try {
             Path p = Paths.get(file.getAbsolutePath());
@@ -122,58 +118,11 @@ public class UploadingFile  implements Serializable{
 
         // deviding file into chunks
         // 
-        long Size = localFile.length();
-        if (Size % (1024 * 1024) == 0) {
-            for (int i = 1; i <= Size / (1024 * 1024); i++) {
-                byte[] ChunkBytes = new byte[1024 * 1024];
-                int k = 0;
-                for (int j = (int) ((i - 1) * (Math.pow(1024, 2) + 1)); j <= i * (Math.pow(1024, 2) + 1) - 1; j++) {
-                    if (k < ChunkBytes.length) {
-                        ChunkBytes[k] = fileArray[j];
-                    }
-                    k++;
-                }
-                Chunk NewChunk = new Chunk(i - 1, 1, ChunkBytes, file.getName());
-                
-                balance.put(NewChunk.getID(), NewChunk.getData());
-                NewChunk.setHashValue((Object)balance.get(NewChunk.getID()));
-                Chunks.add(NewChunk);
-            }
-        } else {
-            int i = 1;
-            int j = 0;
-            for (i = 1; i <= Size / (1024 * 1024); i++) {
-                byte[] ChunkBytes = new byte[1024 * 1024];
-                int k = 0;
-                for (j = (int) ((i - 1) * (Math.pow(1024, 2) + 1)); j <= i * (Math.pow(1024, 2) + 1) - 1; j++) {
-                    if (k < ChunkBytes.length) {
-                        ChunkBytes[k] = fileArray[j];
-                    }
-                    k++;
-                }
-                Chunk NewChunk = new Chunk(i - 1, 1, ChunkBytes, file.getName());
-
-                balance.put(NewChunk.getID(), NewChunk.getData());
-                NewChunk.setHashValue((Object)balance.get(NewChunk.getID()));
-                Chunks.add(NewChunk);
-            }
-
-            // adding 1 byte left
-            double MByteLeft = ((double)(Size)/ (1024 * 1024)) - (int)(Size / (1024 * 1024));
-            byte[] ChunkBytes = new byte[1024 * 1024];
-            int k = 0;
-            while (j < Size) {
-                if (k < ChunkBytes.length) {
-                    ChunkBytes[k] = fileArray[j];
-                }
-                k++;
-                j++;
-            }
-            Chunk NewChunk = new Chunk(i - 1, MByteLeft, ChunkBytes, file.getName());
-            
-            balance.put(NewChunk.getID(), NewChunk.getData());
-            NewChunk.setHashValue((Object)balance.get(NewChunk.getID()));
-            Chunks.add(NewChunk);
+        Vector<byte[]> ChunkByteArrayVector = DataPartition.SeparateObjectByteArray(fileArray, BlockSize);
+        int i = 0;
+        for (byte[] ChunkByteArrayVector1 : ChunkByteArrayVector) {
+            this.Chunks.add(new Chunk(i, (double)ChunkByteArrayVector1.length/BlockSize, ChunkByteArrayVector1, file.getName()));
+            i++;
         }
     }
     
@@ -185,15 +134,17 @@ public class UploadingFile  implements Serializable{
         bw.write(this.localFile.getName() + "-----------Size: " + (double)this.localFile.length()/(1024*1024) + "MB \n");
         bw.newLine();
         
-        //Hashtable balance =new Hashtable();
+        Hashtable balance =new Hashtable();
+
         for (int i = 0; i < this.Chunks.size(); i++){
             Chunk chunk = this.Chunks.get(i);
             bw.write("-- chunk : " + chunk.getID() + "\n");
             bw.newLine();
             String n = String.format("%.10f", chunk.getSize());
             bw.write("   size: " + n + "\n");   
-            bw.newLine(); 
-            bw.write("   Hash Value: " + chunk.getHashValue().toString() + "\n");   
+            bw.newLine();
+            balance.put(chunk.getID(), chunk.getData());
+            bw.write("   Hash Value: " + (Object)balance.get(chunk.getID()).toString() + "\n");   
             bw.newLine();
         }
         

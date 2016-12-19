@@ -5,27 +5,18 @@
  */
 package Thread;
 
-import BusinessLogic.Chunk;
 import BusinessLogic.UploadingFile;
 import Converter.DataPartition;
 import Converter.TypeConverter;
 import GraphicInterface.MainInterface;
-import java.io.BufferedInputStream;
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-import java.lang.instrument.Instrumentation;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
-import java.net.SocketException;
-import java.net.UnknownHostException;
 import java.util.Arrays;
 import java.util.Vector;
 import java.util.logging.Level;
@@ -87,9 +78,6 @@ public class ChunkSender implements Runnable{
 
                         // (6) send name of found file to client, who want to search
                         socket.send(new DatagramPacket(TypeConverter.serialize(FoundFile.getLocalFile().getName()), TypeConverter.serialize(FoundFile.getLocalFile().getName()).length, (InetAddress) TypeConverter.deserialize(IpSrcPacket.getData()), DestPort));
-                        
-                        // (7) sending torrent file
-                        socket.send(new DatagramPacket(this.ReadFileContent(torrent), this.ReadFileContent(torrent).length, (InetAddress) TypeConverter.deserialize(IpSrcPacket.getData()), DestPort));
                     }
                     else {
                         // (5) sending packet length of found files
@@ -130,26 +118,71 @@ public class ChunkSender implements Runnable{
                         UploadingFile file = this.SearchFile(str[0]);
                         
                         if (this.CompareByteArray(Torrent, TorrentPacket.getData()) && file != null) {
-                            // (8) sending the size of file you want to download          
+                            // (7) sending the size of file you want to download          
                             socket.send(new DatagramPacket(TypeConverter.serialize(file.getLocalFile().length()), TypeConverter.serialize(file.getLocalFile().length()).length, (InetAddress) TypeConverter.deserialize(IpSrcPacket.getData()), DestPort));
 
-                            // (9) sending local IP to the machine calling te request
+                            // (8) sending local IP to the machine calling te request
                             socket.send(new DatagramPacket(TypeConverter.serialize(this.Interface.GetMachine().getIPAddr()), TypeConverter.serialize(this.Interface.GetMachine().getIPAddr()).length, (InetAddress) TypeConverter.deserialize(IpSrcPacket.getData()), DestPort));
                             
-                            // (10) sending file name back
+                            // (9) sending file name back
                             socket.send(new DatagramPacket(TypeConverter.serialize(file.getLocalFile().getName()), TypeConverter.serialize(file.getLocalFile().getName()).length, (InetAddress) TypeConverter.deserialize(IpSrcPacket.getData()), DestPort));
                         } else {
-                            // (8) sending file not found message
+                            // (7) sending file not found message
                             long FNFMessage = -1;
                             System.out.println("1 ) error");
                             this.socket.send(new DatagramPacket(TypeConverter.serialize(FNFMessage), TypeConverter.serialize(FNFMessage).length, (InetAddress) TypeConverter.deserialize(IpSrcPacket.getData()), this.DestPort));
                         }
                     }
                     else {
-                        // (8) sending file not found message
+                        // (7) sending file not found message
                         long FNFMessage = -1;
                         System.out.println("2 ) error");
                         this.socket.send(new DatagramPacket(TypeConverter.serialize(FNFMessage), TypeConverter.serialize(FNFMessage).length, (InetAddress) TypeConverter.deserialize(IpSrcPacket.getData()), this.DestPort));
+                    }
+                }
+                else if (message == 3){
+                    // (1) receive file's name to search
+                    DatagramPacket FileNamePacket = new DatagramPacket(new byte[1024], 1024);
+                    socket.receive(FileNamePacket);
+                    
+                    // searching the file in local
+                    UploadingFile FoundFile = this.SearchFile((String)TypeConverter.deserialize(FileNamePacket.getData()));
+                    
+                    // (2) receive IP src
+                    DatagramPacket IpSrcPacket = new DatagramPacket(new byte[1024], 1024);
+                    socket.receive(IpSrcPacket);
+                    
+                    // (3) receiving src port
+                    DatagramPacket PortSrcPacket = new DatagramPacket(new byte[1024], 1024);
+                    socket.receive(PortSrcPacket);
+                    DestPort = (int)TypeConverter.deserialize(PortSrcPacket.getData());
+                    
+                    // (10) sending object ID you want to download
+                    DatagramPacket ObectIDPacket = new DatagramPacket(new byte[1024], 1024);
+                    socket.receive(ObectIDPacket);
+                    int ObjID = (int)TypeConverter.deserialize(ObectIDPacket.getData());
+                    
+                    if (FoundFile != null){
+                        // (11) sending size of packet chunk
+                        int length = FoundFile.getChunks().get(ObjID).getData().length;
+                        System.out.println("l = " + length);
+                        DatagramPacket SizePacket = new DatagramPacket(TypeConverter.serialize(length), TypeConverter.serialize(length).length, (InetAddress) TypeConverter.deserialize(IpSrcPacket.getData()), this.DestPort);
+                        socket.send(SizePacket);
+                        
+                        // (12) sending chunk
+                        // devide datapacket into frames and send it
+                        Vector<byte[]> Frames = DataPartition.SeparateObjectByteArray(FoundFile.getChunks().get(ObjID).getData(), 65507);
+                        for (byte[] Frame : Frames) {
+                            System.out.println(Frame.length);
+                            Thread.sleep(5);
+                            DatagramPacket FramePacket = new DatagramPacket(Frame, Frame.length, (InetAddress) TypeConverter.deserialize(IpSrcPacket.getData()), this.DestPort);
+                            socket.send(FramePacket);
+                        }
+                    }else {
+                        // (11) sending file not found mss
+                        int FNFMessage = -1;
+                        System.out.println("sending error");
+                        socket.send(new DatagramPacket(TypeConverter.serialize(FNFMessage), TypeConverter.serialize(FNFMessage).length, (InetAddress) TypeConverter.deserialize(IpSrcPacket.getData()), this.DestPort));
                     }
                 }
             } catch (IOException ex) {
@@ -157,6 +190,10 @@ public class ChunkSender implements Runnable{
                 socket.close();
                 this.thread.interrupt();
             } catch (ClassNotFoundException ex) {
+                Logger.getLogger(ChunkSender.class.getName()).log(Level.SEVERE, null, ex);
+                socket.close();
+                this.thread.interrupt();
+            } catch (InterruptedException ex) {
                 Logger.getLogger(ChunkSender.class.getName()).log(Level.SEVERE, null, ex);
                 socket.close();
                 this.thread.interrupt();
