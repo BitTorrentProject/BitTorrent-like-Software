@@ -85,7 +85,7 @@ public class ChunkReceiver implements Runnable{
                         // inserting item (Found files 'name) to table interface
                         System.out.println("---------------------------------");
                         DefaultTableModel model = (DefaultTableModel) this.Interface.GetTableDownloadProcess().getModel();
-                        model.addRow(new Object[]{fileName, FileLength, ""});
+                        model.addRow(new Object[]{fileName, FileLength});
                         //this.Interface.GetMachine().getFoundFiles().addElement(File);
                         this.Interface.GetTableDownloadProcess().setModel(model);
                         Integer result = Integer.parseInt(this.Interface.getLbNumberResult().getText()) + 1;
@@ -114,10 +114,12 @@ public class ChunkReceiver implements Runnable{
                         // inserting file info to table
                         System.out.println("---------------------------------");
                         DefaultTableModel model = (DefaultTableModel) this.Interface.GetTableDownloadProcess().getModel();
-                        model.addRow(new Object[]{fileName, message, ""});
+                        model.addRow(new Object[]{fileName, message});
+                        
                         this.Interface.GetTableDownloadProcess().setModel(model);
                         Integer result = Integer.parseInt(this.Interface.getLbNumberResult().getText()) + 1;
                         this.Interface.getLbNumberResult().setText(result.toString());
+                        // đưa ra 2 biến value, maxsize= size file, 1 size đã đc down
                     }
                     else {
                         System.out.println("Error");

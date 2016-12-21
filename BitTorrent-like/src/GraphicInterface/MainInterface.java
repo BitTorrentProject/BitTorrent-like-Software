@@ -60,8 +60,8 @@ public class MainInterface extends javax.swing.JFrame implements ActionListener 
     Object[] columnFileList = {"FileName", "Size", "Status"};
     DefaultTableModel tableModelFileList = new DefaultTableModel(columnFileList, 0);
 
-    Object[] columnDownloadProcess = {"FileName", "Size", "Process"};
-    Object[][] g = {{"4", "5", "9"}};
+    Object[] columnDownloadProcess = {"FileName", "Size"};
+    //Object[][] g = {{"4", "5", "9"}};
    //DefaultTableModel tableModelDownloadProcess=new DefaultTableModel(g, columnFileList);
 
     Object[] columnInforPeerConnect = {"IP", "Host Name", "Status"};
@@ -94,7 +94,8 @@ public class MainInterface extends javax.swing.JFrame implements ActionListener 
         setVisible(true);
         setLocation(100, 100);
         setTitle("BitTorrent");
-        
+        pgbDownLoad.setStringPainted(true);// hiện %
+        pgbDownLoad.setForeground(Color.red);
         ChunkSender sender = new ChunkSender(this, socket2);
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         this.addWindowListener(new WindowAdapter() {
@@ -372,13 +373,13 @@ public class MainInterface extends javax.swing.JFrame implements ActionListener 
         jLabel5 = new javax.swing.JLabel();
         jScrollPane4 = new javax.swing.JScrollPane();
         tableDownloadProcess = new javax.swing.JTable();
-        jLabel1 = new javax.swing.JLabel();
         btnDownLoadFile = new javax.swing.JButton();
         btnAddFileBittorrent = new javax.swing.JButton();
         jLabel2 = new javax.swing.JLabel();
         lbNumberResult = new javax.swing.JLabel();
         jLabel3 = new javax.swing.JLabel();
         lbFileName = new javax.swing.JLabel();
+        pgbDownLoad = new javax.swing.JProgressBar();
         jPanel2 = new javax.swing.JPanel();
         jLabel6 = new javax.swing.JLabel();
         jScrollPane3 = new javax.swing.JScrollPane();
@@ -391,6 +392,7 @@ public class MainInterface extends javax.swing.JFrame implements ActionListener 
         btnDeleteFile = new javax.swing.JButton();
         jScrollPane1 = new javax.swing.JScrollPane();
         tableFileList = new javax.swing.JTable();
+        btnRefresh = new javax.swing.JButton();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         addWindowListener(new java.awt.event.WindowAdapter() {
@@ -439,11 +441,11 @@ public class MainInterface extends javax.swing.JFrame implements ActionListener 
 
             },
             new String [] {
-                "File", "Size", "Process"
+                "File", "Size"
             }
         ) {
             boolean[] canEdit = new boolean [] {
-                false, false, false
+                false, false
             };
 
             public boolean isCellEditable(int rowIndex, int columnIndex) {
@@ -451,9 +453,6 @@ public class MainInterface extends javax.swing.JFrame implements ActionListener 
             }
         });
         jScrollPane4.setViewportView(tableDownloadProcess);
-
-        jLabel1.setFont(new java.awt.Font("Tahoma", 1, 12)); // NOI18N
-        jLabel1.setText("Download Process");
 
         btnDownLoadFile.setIcon(new javax.swing.ImageIcon(getClass().getResource("/Image/down.png"))); // NOI18N
         btnDownLoadFile.setText("Download");
@@ -491,15 +490,6 @@ public class MainInterface extends javax.swing.JFrame implements ActionListener 
                 .addContainerGap()
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(jPanel1Layout.createSequentialGroup()
-                        .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(jLabel1)
-                            .addComponent(jScrollPane4, javax.swing.GroupLayout.PREFERRED_SIZE, 411, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addGroup(jPanel1Layout.createSequentialGroup()
-                                .addComponent(tfSearch, javax.swing.GroupLayout.PREFERRED_SIZE, 250, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addGap(18, 18, 18)
-                                .addComponent(jLabel5, javax.swing.GroupLayout.PREFERRED_SIZE, 154, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                        .addGap(0, 0, Short.MAX_VALUE))
-                    .addGroup(jPanel1Layout.createSequentialGroup()
                         .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
                             .addGroup(javax.swing.GroupLayout.Alignment.LEADING, jPanel1Layout.createSequentialGroup()
                                 .addComponent(jLabel3)
@@ -515,7 +505,17 @@ public class MainInterface extends javax.swing.JFrame implements ActionListener 
                                 .addComponent(jLabel2)
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                                 .addComponent(lbNumberResult)
-                                .addGap(24, 24, 24)))))
+                                .addGap(24, 24, 24))))
+                    .addGroup(jPanel1Layout.createSequentialGroup()
+                        .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addGroup(jPanel1Layout.createSequentialGroup()
+                                .addComponent(tfSearch, javax.swing.GroupLayout.PREFERRED_SIZE, 250, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addGap(18, 18, 18)
+                                .addComponent(jLabel5, javax.swing.GroupLayout.PREFERRED_SIZE, 154, javax.swing.GroupLayout.PREFERRED_SIZE))
+                            .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
+                                .addComponent(pgbDownLoad, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                                .addComponent(jScrollPane4, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, 411, Short.MAX_VALUE)))
+                        .addGap(0, 0, Short.MAX_VALUE)))
                 .addContainerGap())
         );
         jPanel1Layout.setVerticalGroup(
@@ -535,11 +535,11 @@ public class MainInterface extends javax.swing.JFrame implements ActionListener 
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(tfSearch, javax.swing.GroupLayout.PREFERRED_SIZE, 30, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(jLabel5, javax.swing.GroupLayout.PREFERRED_SIZE, 30, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addComponent(jLabel1)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addGap(37, 37, 37)
                 .addComponent(jScrollPane4, javax.swing.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE)
-                .addContainerGap())
+                .addGap(18, 18, 18)
+                .addComponent(pgbDownLoad, javax.swing.GroupLayout.PREFERRED_SIZE, 27, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(25, 25, 25))
         );
 
         jPanel2.setBorder(javax.swing.BorderFactory.createEtchedBorder());
@@ -647,6 +647,13 @@ public class MainInterface extends javax.swing.JFrame implements ActionListener 
         });
         jScrollPane1.setViewportView(tableFileList);
 
+        btnRefresh.setIcon(new javax.swing.ImageIcon(getClass().getResource("/Image/Button-Refresh-icon.png"))); // NOI18N
+        btnRefresh.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnRefreshActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout jPanel3Layout = new javax.swing.GroupLayout(jPanel3);
         jPanel3.setLayout(jPanel3Layout);
         jPanel3Layout.setHorizontalGroup(
@@ -661,25 +668,27 @@ public class MainInterface extends javax.swing.JFrame implements ActionListener 
                         .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
             .addGroup(jPanel3Layout.createSequentialGroup()
-                .addGap(40, 40, 40)
+                .addGap(29, 29, 29)
                 .addComponent(btnUpFile, javax.swing.GroupLayout.PREFERRED_SIZE, 75, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addComponent(btnRefresh, javax.swing.GroupLayout.PREFERRED_SIZE, 75, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(87, 87, 87)
                 .addComponent(btnDeleteFile, javax.swing.GroupLayout.PREFERRED_SIZE, 75, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(48, 48, 48))
+                .addGap(38, 38, 38))
         );
         jPanel3Layout.setVerticalGroup(
             jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel3Layout.createSequentialGroup()
                 .addContainerGap()
-                .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
-                    .addComponent(btnDeleteFile, javax.swing.GroupLayout.PREFERRED_SIZE, 75, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addGroup(jPanel3Layout.createSequentialGroup()
-                        .addComponent(jLabel4)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 140, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addGap(18, 18, 18)
-                        .addComponent(btnUpFile, javax.swing.GroupLayout.PREFERRED_SIZE, 75, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addComponent(jLabel4)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 140, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(18, 18, 18)
+                .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                    .addComponent(btnUpFile, javax.swing.GroupLayout.DEFAULT_SIZE, 75, Short.MAX_VALUE)
+                    .addComponent(btnDeleteFile, javax.swing.GroupLayout.DEFAULT_SIZE, 75, Short.MAX_VALUE)
+                    .addComponent(btnRefresh, javax.swing.GroupLayout.DEFAULT_SIZE, 75, Short.MAX_VALUE))
+                .addContainerGap(22, Short.MAX_VALUE))
         );
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
@@ -705,7 +714,7 @@ public class MainInterface extends javax.swing.JFrame implements ActionListener 
                         .addComponent(jPanel2, javax.swing.GroupLayout.PREFERRED_SIZE, 176, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(jPanel3, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                .addContainerGap(14, Short.MAX_VALUE))
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
 
         pack();
@@ -936,6 +945,13 @@ public class MainInterface extends javax.swing.JFrame implements ActionListener 
        // System.out.println("chương trình đang tắt");
     }//GEN-LAST:event_formWindowClosing
 
+    private void btnRefreshActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnRefreshActionPerformed
+        // TODO add your handling code here:
+        DefaultTableModel model = (DefaultTableModel) tableFileList.getModel();
+        model.getDataVector().removeAllElements();
+        loadFilesFromLocalBitTorrent(true);
+    }//GEN-LAST:event_btnRefreshActionPerformed
+
     public void actionPerform(ActionEvent e) {
         if ((JMenuItem) e.getSource() == miOpen) {
             System.out.println("bạn chọn open");
@@ -990,8 +1006,8 @@ public class MainInterface extends javax.swing.JFrame implements ActionListener 
     private javax.swing.JButton btnAddFileBittorrent;
     private javax.swing.JButton btnDeleteFile;
     private javax.swing.JButton btnDownLoadFile;
+    private javax.swing.JButton btnRefresh;
     private javax.swing.JButton btnUpFile;
-    private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel2;
     private javax.swing.JLabel jLabel3;
     private javax.swing.JLabel jLabel4;
@@ -1007,6 +1023,7 @@ public class MainInterface extends javax.swing.JFrame implements ActionListener 
     private javax.swing.JLabel lYourIP;
     private javax.swing.JLabel lbFileName;
     private javax.swing.JLabel lbNumberResult;
+    private javax.swing.JProgressBar pgbDownLoad;
     private javax.swing.JPopupMenu puMenu1;
     private javax.swing.JTable tableDownloadProcess;
     private javax.swing.JTable tableFileList;
