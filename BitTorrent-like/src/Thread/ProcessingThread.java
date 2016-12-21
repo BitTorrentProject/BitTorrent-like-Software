@@ -16,8 +16,6 @@ import java.net.DatagramSocket;
 import java.net.SocketException;
 import java.util.Random;
 import java.util.Vector;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 /**
  *
@@ -28,7 +26,7 @@ public class ProcessingThread extends ChunkReceiver{
     private int ChunkID;
     
     public ProcessingThread(String IPNeighbor, MainInterface Interface, DatagramSocket sock, int LocalPort)
-            throws IOException {
+    {
         super(IPNeighbor, Interface, sock, LocalPort);
     }
     
@@ -50,8 +48,9 @@ public class ProcessingThread extends ChunkReceiver{
             // starting send-receive data
             this.ProcessMessage();
         } catch (SocketException ex) {
-            Logger.getLogger(ProcessingThread.class.getName()).log(Level.SEVERE, null, ex);
+            //Logger.getLogger(ProcessingThread.class.getName()).log(Level.SEVERE, null, ex);
         } finally {
+            System.out.println("Ending thread");
             this.socket.close();
             this.thread.interrupt();
         }
@@ -139,10 +138,10 @@ public class ProcessingThread extends ChunkReceiver{
                 System.out.println("Error");
             }
         } catch (IOException ex) {
-            Logger.getLogger(ProcessingThread.class.getName()).log(Level.SEVERE, null, ex);
+            //Logger.getLogger(ProcessingThread.class.getName()).log(Level.SEVERE, null, ex);
             
         } catch (ClassNotFoundException ex) {
-            Logger.getLogger(ProcessingThread.class.getName()).log(Level.SEVERE, null, ex);
+            //Logger.getLogger(ProcessingThread.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
     

@@ -27,6 +27,14 @@ import java.util.logging.Logger;
  * @author admin
  */
 public class ChunkSender implements Runnable{
+
+    public DatagramSocket getSocket() {
+        return socket;
+    }
+
+    public Thread getThread() {
+        return thread;
+    }
     private DatagramSocket socket;
     private int DestPort;
     private MainInterface Interface;
@@ -186,7 +194,7 @@ public class ChunkSender implements Runnable{
                     }
                 }
             } catch (IOException ex) {
-                Logger.getLogger(ChunkSender.class.getName()).log(Level.SEVERE, null, ex);
+                //Logger.getLogger(ChunkSender.class.getName()).log(Level.SEVERE, null, ex);
                 socket.close();
                 this.thread.interrupt();
             } catch (ClassNotFoundException ex) {

@@ -7,12 +7,12 @@ package Thread;
 
 import Converter.TypeConverter;
 import GraphicInterface.MainInterface;
-import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.table.DefaultTableModel;
@@ -22,6 +22,10 @@ import javax.swing.table.DefaultTableModel;
  * @author admin
  */
 public class ChunkReceiver implements Runnable{
+
+    public DatagramSocket getSocket() {
+        return socket;
+    }
 
     public Thread getThread() {
         return thread;
@@ -34,15 +38,19 @@ public class ChunkReceiver implements Runnable{
     protected InetAddress IPDest;
     protected Thread thread;
     
-    public ChunkReceiver(String IPNeighbor, MainInterface Interface, DatagramSocket sock, int LocalPort) throws IOException{
-        thread = new Thread(this);
-        this.Interface = Interface;
-        socket = sock;
-        SrcPort = LocalPort;
-        
-        // destination IP
-        IPDest = InetAddress.getByName(IPNeighbor);
-        System.out.println(IPDest.toString());
+    public ChunkReceiver(String IPNeighbor, MainInterface Interface, DatagramSocket sock, int LocalPort){
+        try {
+            thread = new Thread(this);
+            this.Interface = Interface;
+            socket = sock;
+            SrcPort = LocalPort;
+            
+            // destination IP
+            IPDest = InetAddress.getByName(IPNeighbor);
+            System.out.println(IPDest.toString());
+        } catch (UnknownHostException ex) {
+            Logger.getLogger(ChunkReceiver.class.getName()).log(Level.SEVERE, null, ex);
+        }
     }
     
     @Override
@@ -120,10 +128,11 @@ public class ChunkReceiver implements Runnable{
                 }
             }
         } catch (IOException ex) {
-            Logger.getLogger(ChunkReceiver.class.getName()).log(Level.SEVERE, null, ex);
+            //Logger.getLogger(ChunkReceiver.class.getName()).log(Level.SEVERE, null, ex);
         } catch (ClassNotFoundException ex) {
-            Logger.getLogger(ChunkReceiver.class.getName()).log(Level.SEVERE, null, ex);
+            //Logger.getLogger(ChunkReceiver.class.getName()).log(Level.SEVERE, null, ex);
         } finally {
+            System.out.println("Ending thread");
             this.socket.close();
             this.thread.interrupt();
         }
@@ -179,28 +188,12 @@ public class ChunkReceiver implements Runnable{
             DatagramPacket PortPacket = new DatagramPacket(TypeConverter.serialize(SrcPort), TypeConverter.serialize(SrcPort).length, IPDest, DestPort);
             socket.send(PortPacket);
         } catch (IOException ex) {
-            Logger.getLogger(ChunkReceiver.class.getName()).log(Level.SEVERE, null, ex);
+            //Logger.getLogger(ChunkReceiver.class.getName()).log(Level.SEVERE, null, ex);
             socket.close();
             this.thread.interrupt();
         }
     }
     
-    private boolean CompareFileTorrent(File Torrent) throws IOException {
-        byte[] torrentArray = TypeConverter.serialize(Torrent);
-        
-        File folder = new File("BitTorrent");
-        File Temp = null;
-        File[] LocalFileArray = folder.listFiles();
-        for (File fileEntry : LocalFileArray) {
-           if (fileEntry.getName().equals(Torrent.getName())) {
-               Temp = fileEntry;
-               break;
-            }
-        }
-        
-        byte[] TempBytes = TypeConverter.serialize(Temp);
-        return (TempBytes.equals(TypeConverter.serialize(Torrent)));
-    }
     // starting the thread
     public void start() {
         thread.start();

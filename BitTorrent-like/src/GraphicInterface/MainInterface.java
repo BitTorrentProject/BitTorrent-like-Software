@@ -82,8 +82,6 @@ public class MainInterface extends javax.swing.JFrame implements ActionListener 
 
     DatagramSocket socket2 = new DatagramSocket(6060);
     String Peers[];
-
-    //Vector<byte[]> torrents = new Vector<byte[]>();
     public List<Chunk> Chunks;
     public Vector<ProcessingThread> receivers = new Vector<>();
     private Vector<ChunkReceiver> chunkReceiver = new Vector<>();
@@ -96,14 +94,30 @@ public class MainInterface extends javax.swing.JFrame implements ActionListener 
         setVisible(true);
         setLocation(100, 100);
         setTitle("BitTorrent");
-        setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
+        
+        ChunkSender sender = new ChunkSender(this, socket2);
+        setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         this.addWindowListener(new WindowAdapter() {
                 public void windowClosing(WindowEvent e) {
-                    int hoi = JOptionPane.showConfirmDialog(null, "Bạn có muốn thoát chương trình không?",
-                            "Cảnh Báo", JOptionPane.YES_NO_OPTION);
+                    int hoi = JOptionPane.showConfirmDialog(null, "Are you sure want to quit ?",
+                            "Warns", JOptionPane.YES_NO_OPTION);
                     if (hoi == JOptionPane.YES_OPTION) {
-                        System.out.println("gọi hàm gì đó đây");
+                        sender.getSocket().close();
+                        sender.getThread().interrupt();
+                        
+                        for (ChunkReceiver r : chunkReceiver)
+                        {
+                            r.getSocket().close();
+                            r.getThread().interrupt();
+                        }
+                        
+                        for (ProcessingThread r : receivers)
+                        {
+                            r.getSocket().close();
+                            r.getThread().interrupt();
+                        }
                         System.exit(0);
+                        dispose();
                     }
                 }
             });
@@ -111,7 +125,7 @@ public class MainInterface extends javax.swing.JFrame implements ActionListener 
         tfSearch.getParent().requestFocus();
         lYourIP.setText("Your IP: " + getYourIP());
         lYourHostName.setText("Your Host Name: " + getYourHostName());
-        this.loadFilesFromLocalBitTorrent(false);
+        this.loadFilesFromLocalBitTorrent();
         setResizable(false);
 
         tableFileList.setComponentPopupMenu(fileListPopupMenu);
@@ -133,9 +147,7 @@ public class MainInterface extends javax.swing.JFrame implements ActionListener 
             InetAddress IPDest = InetAddress.getByName(Peers[i]);
         }
 
-        //socket1.setReuseAddress(true);
-        ChunkSender sender = new ChunkSender(this, socket2);
-
+        
         sender.start();
     }
 
@@ -175,7 +187,7 @@ public class MainInterface extends javax.swing.JFrame implements ActionListener 
         return this.lbNumberResult;
     }
 
-    private void loadFilesFromLocalBitTorrent(boolean CreateTorrent) {
+    private void loadFilesFromLocalBitTorrent() {
         new File("BitTorrent").mkdir();
         File folder = new File("BitTorrent");
         for (final File fileEntry : folder.listFiles()) {
@@ -190,9 +202,9 @@ public class MainInterface extends javax.swing.JFrame implements ActionListener 
                     tableModelFileList.addRow(rowData);
                     //listModelProcessFile.addElement(UploadedFile.GetName() + "-----------------size: " + UploadedFile.GetSize() + "-----------------no of chunks: " + UploadedFile.GetChunks().size());
                     tableFileList.setModel(tableModelFileList);
-
-                    // write file info into file.torrent
-                    if (CreateTorrent == true) {
+                    File fileTorrrent = new File("BitTorrent//" + UploadedFile.getLocalFile().getName() + ".torrent");
+                    // write file info into file.torrent if the file's torrent does not exist
+                    if (!fileTorrrent.exists()) {
                         try {
                             UploadedFile.WriteFileInfoToTorrent();
                         } catch (IOException ex) {
@@ -207,7 +219,40 @@ public class MainInterface extends javax.swing.JFrame implements ActionListener 
             }
         }
     }
+    
+    private void loadFilesFromLocalBitTorrent(boolean MustWriteTorrent) {
+        new File("BitTorrent").mkdir();
+        File folder = new File("BitTorrent");
+        for (final File fileEntry : folder.listFiles()) {
+            if (!fileEntry.isDirectory()) {
+                // if the file does not contain extension .torrent
 
+                if (!fileEntry.getName().endsWith(".torrent")) {
+                    UploadingFile UploadedFile = new UploadingFile(fileEntry, 0);
+                    m.AddFile(UploadedFile);
+                    //tableModelProcessFile.addElement(UploadedFile.GetName());
+                    Object[] rowData = {UploadedFile.getLocalFile().getName(), RoundFileSize(UploadedFile.getLocalFile().length()), "available"};
+                    tableModelFileList.addRow(rowData);
+                    //listModelProcessFile.addElement(UploadedFile.GetName() + "-----------------size: " + UploadedFile.GetSize() + "-----------------no of chunks: " + UploadedFile.GetChunks().size());
+                    tableFileList.setModel(tableModelFileList);
+                    
+                    // write file info into file.torrent if the file's torrent does not exist
+                    if (MustWriteTorrent) {
+                        try {
+                            UploadedFile.WriteFileInfoToTorrent();
+                        } catch (IOException ex) {
+                            String[] Name = UploadedFile.getLocalFile().getName().split(".");
+                            JOptionPane.showMessageDialog(null, Name[0], "Erorr", JOptionPane.ERROR_MESSAGE);
+                        }
+                    }
+                }
+            } else {
+                JOptionPane.showMessageDialog(null, "Fail to Load Files From Local BitTorrent", "Erorr", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+        }
+    }
+    
     private String[] ReadInfoEachMachine() throws FileNotFoundException {
         Scanner s = null;
         s = new Scanner(new BufferedReader(new FileReader("nodes.txt")));
@@ -842,8 +887,6 @@ public class MainInterface extends javax.swing.JFrame implements ActionListener 
                     receiver.start();
                     this.chunkReceiver.addElement(receiver);
                 }
-            } catch (FileNotFoundException ex) {
-                Logger.getLogger(MainInterface.class.getName()).log(Level.SEVERE, null, ex);
             } catch (IOException ex) {
                 Logger.getLogger(MainInterface.class.getName()).log(Level.SEVERE, null, ex);
             }
@@ -877,13 +920,9 @@ public class MainInterface extends javax.swing.JFrame implements ActionListener 
 
         // creating thread to download chunk from other machines
         for (int i = 0; i < nChunks; i++) {
-            try {
-                ProcessingThread thread = new ProcessingThread(null, this, null, 0);
-                thread.setChunkID(i);
-                thread.start();
-            } catch (IOException ex) {
-                Logger.getLogger(MainInterface.class.getName()).log(Level.SEVERE, null, ex);
-            }
+            ProcessingThread thread = new ProcessingThread(null, this, null, 0);
+            thread.setChunkID(i);
+            thread.start();
         }
 
         // wait for all receiver process to stop
