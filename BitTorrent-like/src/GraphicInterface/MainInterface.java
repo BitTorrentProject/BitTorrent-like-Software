@@ -38,6 +38,7 @@ import java.util.Vector;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.JLabel;
+import javax.swing.JProgressBar;
 import javax.swing.JTable;
 import javax.swing.JTextField;
 import javax.swing.table.DefaultTableModel;
@@ -47,6 +48,14 @@ import javax.swing.table.DefaultTableModel;
  * @author admin
  */
 public class MainInterface extends javax.swing.JFrame implements ActionListener {
+
+    public JProgressBar getPgbDownLoad() {
+        return pgbDownLoad;
+    }
+
+    public JTable getTableFileList() {
+        return tableFileList;
+    }
 
     public String[] getPeers() {
         return Peers;
@@ -353,7 +362,7 @@ public class MainInterface extends javax.swing.JFrame implements ActionListener 
         }
     }
 
-    public String RoundFileSize(long size) {
+    public static String RoundFileSize(long size) {
         // Double d;
         if (size < 1024) {
             return Long.toString(size) + " Byte";
@@ -445,7 +454,7 @@ public class MainInterface extends javax.swing.JFrame implements ActionListener 
 
             },
             new String [] {
-                "File", "Size"
+                "File", "Size (bytes)"
             }
         ) {
             boolean[] canEdit = new boolean [] {

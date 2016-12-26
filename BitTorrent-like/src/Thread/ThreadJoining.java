@@ -11,6 +11,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.swing.table.DefaultTableModel;
 
 /**
  *
@@ -39,6 +40,10 @@ public class ThreadJoining implements Runnable{
             File BittorrentFile = new File("BitTorrent//" + this.Interface.StaticFileTorrent.getName());
             UploadingFile.copyFileUsingChannel(this.Interface.StaticFileTorrent, BittorrentFile);
             
+            // insert to table of local files
+            DefaultTableModel model = (DefaultTableModel) this.Interface.getTableFileList().getModel();
+            model.addRow(new Object[]{DownloadedFile.getLocalFile().getName(), MainInterface.RoundFileSize(DownloadedFile.getLocalFile().length()), "available"});
+            this.Interface.getTableFileList().setModel(model);
         } catch (InterruptedException | IOException ex) {
             Logger.getLogger(ThreadJoining.class.getName()).log(Level.SEVERE, null, ex);
 

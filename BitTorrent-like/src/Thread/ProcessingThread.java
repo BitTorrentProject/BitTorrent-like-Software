@@ -133,16 +133,20 @@ public class ProcessingThread extends ChunkReceiver{
                 
                 //set chunk
                 this.Interface.Chunks.set(ChunkID, new Chunk(this.ChunkID, ChunkSize, ChunkArray, FileName));
+                
+                // updating Process bar
+                double percentage = (double)((PacketSize * 100)/(long)this.Interface.GetTableDownloadProcess().getModel().getValueAt(0, 1));
+                this.Interface.getPgbDownLoad().setValue((int) (this.Interface.getPgbDownLoad().getValue() + percentage));
             }
             else {
                 System.out.println("Error");
             }
-        } catch (IOException ex) {
+        } catch (IOException | ClassNotFoundException ex) {
             //Logger.getLogger(ProcessingThread.class.getName()).log(Level.SEVERE, null, ex);
             
-        } catch (ClassNotFoundException ex) {
-            //Logger.getLogger(ProcessingThread.class.getName()).log(Level.SEVERE, null, ex);
         }
+        //Logger.getLogger(ProcessingThread.class.getName()).log(Level.SEVERE, null, ex);
+        
     }
     
     private void setIPDest() {
