@@ -17,18 +17,18 @@ import java.util.logging.Logger;
  * @author admin
  */
 public class ThreadJoining implements Runnable{
-    private Thread t;
+    private Thread thread;
     private MainInterface Interface;
     public ThreadJoining(MainInterface Interface) {
-        t = new Thread(this);
+        thread = new Thread(this);
         this.Interface = Interface;
     }
     
     @Override
     public void run() {
         try {
-            for (ProcessingThread thread : this.Interface.receivers) {
-                thread.getThread().join();
+            for (ProcessingThread t : this.Interface.receivers) {
+                t.getThread().join();
             }
             
             // create file downloaded at local
@@ -39,32 +39,16 @@ public class ThreadJoining implements Runnable{
             File BittorrentFile = new File("BitTorrent//" + this.Interface.StaticFileTorrent.getName());
             UploadingFile.copyFileUsingChannel(this.Interface.StaticFileTorrent, BittorrentFile);
             
-        } catch (InterruptedException ex) {
+        } catch (InterruptedException | IOException ex) {
             Logger.getLogger(ThreadJoining.class.getName()).log(Level.SEVERE, null, ex);
 
-        }catch (IOException ex) {
-            Logger.getLogger(ThreadJoining.class.getName()).log(Level.SEVERE, null, ex);
         }
         finally {
-            this.t.interrupt();
+            this.thread.interrupt();
         }
     }
     
     public void start(){
-        t.start();
-    }
-    
-    private boolean check(int index){
-        if (index == 0) {
-            if (this.Interface.Chunks.get(index) == null)
-                return false;
-            else
-                return true;
-        } else {
-            if (this.Interface.Chunks.get(index) == null)
-                return false;
-            else
-                return this.check(index - 1);
-        }
+        thread.start();
     }
 }

@@ -39,7 +39,7 @@ public class ChunkSender implements Runnable{
     private int DestPort;
     private MainInterface Interface;
     private Thread thread;
-    private DataPacket ReceivedPacket;
+    private DataPacket SentPacket;
     
     public ChunkSender(MainInterface Interface, DatagramSocket sock) {
         thread = new Thread(this);
