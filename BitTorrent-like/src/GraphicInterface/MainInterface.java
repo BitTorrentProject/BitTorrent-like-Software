@@ -880,6 +880,9 @@ public class MainInterface extends javax.swing.JFrame implements ActionListener 
                 JOptionPane.showMessageDialog(null, "Error format file, must *.torrent");
                 return;
             }
+            
+            this.pgbDownLoad.setValue(0);
+            
             lbFileName.setText(fileName.substring(0, fileName.length()-8));
             // wait for all receivers to stop
             for (ChunkReceiver r : chunkReceiver) {
@@ -916,6 +919,11 @@ public class MainInterface extends javax.swing.JFrame implements ActionListener 
     }//GEN-LAST:event_btnAddFileBittorrentActionPerformed
 
     private void btnDownLoadFileActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnDownLoadFileActionPerformed
+        if (lbNumberResult.getText().equals("0") || lbNumberResult.getText().equals("")) {
+            JOptionPane.showMessageDialog(null, "File " + lbFileName.getText() + " is not available", "Message", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+        
         // wait for all receivers to stop
         for (ChunkReceiver r : chunkReceiver) {
             try {

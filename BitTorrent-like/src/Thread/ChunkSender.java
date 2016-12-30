@@ -165,7 +165,7 @@ public class ChunkSender implements Runnable{
                     socket.receive(PortSrcPacket);
                     DestPort = (int)TypeConverter.deserialize(PortSrcPacket.getData());
                     
-                    // (10) sending object ID you want to download
+                    // (10) receiving object ID you want to download
                     DatagramPacket ObectIDPacket = new DatagramPacket(new byte[1024], 1024);
                     socket.receive(ObectIDPacket);
                     int ObjID = (int)TypeConverter.deserialize(ObectIDPacket.getData());
