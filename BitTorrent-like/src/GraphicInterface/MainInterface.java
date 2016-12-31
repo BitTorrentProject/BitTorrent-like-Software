@@ -114,7 +114,7 @@ public class MainInterface extends javax.swing.JFrame implements ActionListener 
                     if (hoi == JOptionPane.YES_OPTION) {
                         sender.getSocket().close();
                         sender.getThread().interrupt();
-                        
+                        //
                         for (ChunkReceiver r : chunkReceiver)
                         {
                             r.getSocket().close();
