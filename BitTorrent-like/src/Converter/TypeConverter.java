@@ -10,6 +10,10 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  *
@@ -35,8 +39,29 @@ public class TypeConverter {
         return obj;
     }
     
+    public static StringBuffer toHexFormat(byte[] array) {
+        StringBuffer sb = new StringBuffer();
+        try {
+            MessageDigest md = MessageDigest.getInstance("MD5");
+            md.update(array);
+            byte[] byteData = md.digest();
+            
+            for (int i = 0; i < byteData.length; i++) {
+                sb.append(Integer.toString((byteData[i] & 0xff) + 0x100, 16).substring(1));
+            }
+        } catch (NoSuchAlgorithmException ex) {
+            Logger.getLogger(TypeConverter.class.getName()).log(Level.SEVERE, null, ex);
+            return null;
+        }
+        return sb;
+    }
+    
     public static void main (String arg[]) throws IOException, ClassNotFoundException {
+        byte[] a = {1,2,3, 4};
+        byte[] b = {1,2,3, 4};
         
+        System.out.println(TypeConverter.toHexFormat(a).toString());
+        System.out.println(TypeConverter.toHexFormat(b).toString());
     }
     
 }

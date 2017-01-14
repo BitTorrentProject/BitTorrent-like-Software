@@ -17,6 +17,7 @@ import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
+import java.net.SocketTimeoutException;
 import java.util.Arrays;
 import java.util.Vector;
 import java.util.logging.Level;
@@ -181,10 +182,32 @@ public class ChunkSender implements Runnable{
                         // devide datapacket into frames and send it
                         Vector<byte[]> Frames = DataPartition.SeparateObjectByteArray(FoundFile.getChunks().get(ObjID).getData(), 65507);
                         for (byte[] Frame : Frames) {
-                            System.out.println(Frame.length);
-                            Thread.sleep(5);
-                            DatagramPacket FramePacket = new DatagramPacket(Frame, Frame.length, (InetAddress) TypeConverter.deserialize(IpSrcPacket.getData()), this.DestPort);
-                            socket.send(FramePacket);
+                            int ack = -1;
+                            
+                            // if ack == 2 : error, the data sent is not received intactly from client -> resend 
+                            while (ack == -1) {
+                                StringBuffer checksum = TypeConverter.toHexFormat(Frame);
+                                DatagramPacket checksumPacket = new DatagramPacket(TypeConverter.serialize(checksum), TypeConverter.serialize(checksum).length, (InetAddress) TypeConverter.deserialize(IpSrcPacket.getData()), this.DestPort);
+                                // sending checksum
+                                socket.send(checksumPacket);
+
+                                // sending frame
+                                DatagramPacket FramePacket = new DatagramPacket(Frame, Frame.length, (InetAddress) TypeConverter.deserialize(IpSrcPacket.getData()), this.DestPort);
+                                socket.send(FramePacket);
+                                
+                                socket.setSoTimeout(5000);
+                                
+                                try {
+                                    // receiving ACK
+                                    DatagramPacket ACKPacket = new DatagramPacket(new byte[1024], 1024);
+                                    socket.receive(ACKPacket);
+
+                                    ack = (int) TypeConverter.deserialize(ACKPacket.getData());
+                                } catch (SocketTimeoutException e) {
+                                    System.out.println((InetAddress) TypeConverter.deserialize(IpSrcPacket.getData()) + "********");
+                                    continue;
+                                }
+                            }
                         }
                     }else {
                         // (11) sending file not found mss
@@ -198,10 +221,6 @@ public class ChunkSender implements Runnable{
                 socket.close();
                 this.thread.interrupt();
             } catch (ClassNotFoundException ex) {
-                Logger.getLogger(ChunkSender.class.getName()).log(Level.SEVERE, null, ex);
-                socket.close();
-                this.thread.interrupt();
-            } catch (InterruptedException ex) {
                 Logger.getLogger(ChunkSender.class.getName()).log(Level.SEVERE, null, ex);
                 socket.close();
                 this.thread.interrupt();

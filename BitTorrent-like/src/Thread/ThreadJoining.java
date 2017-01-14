@@ -18,6 +18,10 @@ import javax.swing.table.DefaultTableModel;
  * @author admin
  */
 public class ThreadJoining implements Runnable{
+
+    public Thread getThread() {
+        return thread;
+    }
     private Thread thread;
     private MainInterface Interface;
     public ThreadJoining(MainInterface Interface) {

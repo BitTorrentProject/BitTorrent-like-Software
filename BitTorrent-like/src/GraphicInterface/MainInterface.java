@@ -94,6 +94,7 @@ public class MainInterface extends javax.swing.JFrame implements ActionListener 
     public List<Chunk> Chunks;
     public Vector<ProcessingThread> receivers = new Vector<>();
     private Vector<ChunkReceiver> chunkReceiver = new Vector<>();
+    ThreadJoining Killer = new ThreadJoining(this);
     public File StaticFileTorrent;
     public Vector<InetAddress> AddrContainingFile = new Vector<>();
 
@@ -114,18 +115,29 @@ public class MainInterface extends javax.swing.JFrame implements ActionListener 
                     if (hoi == JOptionPane.YES_OPTION) {
                         sender.getSocket().close();
                         sender.getThread().interrupt();
-                        //
+                        
+                        // to force all ChunkReceiver to terminate
+                        // close ChunkReceiver socket
                         for (ChunkReceiver r : chunkReceiver)
                         {
-                            r.getSocket().close();
-                            r.getThread().interrupt();
+                            try {
+                                r.getSocket().close();
+                                r.getThread().join();
+                            } catch (InterruptedException ex) {
+                                Logger.getLogger(MainInterface.class.getName()).log(Level.SEVERE, null, ex);
+                            }
                         }
                         
-                        for (ProcessingThread r : receivers)
-                        {
-                            r.getSocket().close();
-                            r.getThread().interrupt();
+                        // waiting to finish downloading
+                        try {
+                            Killer.getThread().join();
+                        } catch (InterruptedException ex) {
+                            Logger.getLogger(MainInterface.class.getName()).log(Level.SEVERE, null, ex);
                         }
+                        
+                        // close all socket in ProcessingThread
+                        for (ProcessingThread r : receivers)
+                            r.getSocket().close();
                         System.exit(0);
                         dispose();
                     }
@@ -854,7 +866,7 @@ public class MainInterface extends javax.swing.JFrame implements ActionListener 
         UploadingFile upLoadingFile = new UploadingFile(file, 1);
 
         m.AddFile(upLoadingFile);
-        Object[] rowData = {upLoadingFile.getLocalFile().getName(), RoundFileSize(upLoadingFile.getLocalFile().length())};
+        Object[] rowData = {upLoadingFile.getLocalFile().getName(), RoundFileSize(upLoadingFile.getLocalFile().length()), "available"};
         tableModelFileList.addRow(rowData);
         tableFileList.setModel(tableModelFileList);
 
@@ -923,7 +935,7 @@ public class MainInterface extends javax.swing.JFrame implements ActionListener 
             JOptionPane.showMessageDialog(null, "File " + lbFileName.getText() + " is not available", "Message", JOptionPane.ERROR_MESSAGE);
             return;
         }
-        
+
         // wait for all receivers to stop
         for (ChunkReceiver r : chunkReceiver) {
             try {
@@ -933,14 +945,14 @@ public class MainInterface extends javax.swing.JFrame implements ActionListener 
             }
         }
         this.chunkReceiver.removeAllElements();
-        
+
         // calculate no of chunks
         //System.out.println(this.tableDownloadProcess.getModel().getValueAt(this.tableDownloadProcess.getSelectedRow(), 1));
         long nChunks = (long) (this.tableDownloadProcess.getModel().getValueAt(0, 1)) / (1024 * 1024);
         if ((long) this.tableDownloadProcess.getModel().getValueAt(0, 1) % (1024 * 1024) != 0) {
             nChunks += 1;
         }
-        
+
         Chunks = new ArrayList((int) nChunks);
         receivers.removeAllElements();
 
@@ -957,7 +969,7 @@ public class MainInterface extends javax.swing.JFrame implements ActionListener 
 
         // wait for all receiver process to stop
         // assemble the chunks downloaded into a file
-        ThreadJoining Killer = new ThreadJoining(this);
+        Killer = new ThreadJoining(this);
         Killer.start();
     }//GEN-LAST:event_btnDownLoadFileActionPerformed
 

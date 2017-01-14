@@ -100,24 +100,97 @@ public class ProcessingThread extends ChunkReceiver{
                 if (PacketSize % (65507) != 0) {
                     // (12) receiving chunk (one chunk have more than 1 frame)
                     for (int i = 0; i < nFrames - 1; i++) {
-                        receivedData = new byte[65507];
-                        socket.receive(new DatagramPacket(receivedData, receivedData.length));
-                        FrameVector.addElement(receivedData);
+                        while (true) {
+                            // receiving checksum
+                            DatagramPacket checksumPacket = new DatagramPacket(new byte[1024], 1024);
+                            socket.receive(checksumPacket);
+                            StringBuffer checksum = (StringBuffer) TypeConverter.deserialize(checksumPacket.getData());
+
+                            // receiving frame
+                            receivedData = new byte[65507];
+                            socket.receive(new DatagramPacket(receivedData, receivedData.length));
+                            StringBuffer cksFrame = TypeConverter.toHexFormat(receivedData);
+
+                            // detecting errors:
+                            if (checksum.toString().equals(cksFrame.toString())) {
+                                // sending ACK
+                                int ack = 1;
+                                DatagramPacket ackPacket = new DatagramPacket(TypeConverter.serialize(ack), TypeConverter.serialize(ack).length, IPDest, DestPort);
+                                socket.send(ackPacket);
+                                
+                                // add element to FrameVector
+                                FrameVector.addElement(receivedData);
+                                break;
+                            }
+                            else {
+                                // sending ACK
+                                int ack = -1;
+                                DatagramPacket ackPacket = new DatagramPacket(TypeConverter.serialize(ack), TypeConverter.serialize(ack).length, IPDest, DestPort);
+                                socket.send(ackPacket);
+                            }
+                        }
                     }
-                    
-                    System.out.println(this.IPDest + " = " + receivedData.length);
-                    receivedData = new byte[PacketSize % (65507)];
-                    socket.receive(new DatagramPacket(receivedData, receivedData.length));
-                    FrameVector.addElement(receivedData);
-                    System.out.println(this.IPDest + " = " + receivedData.length);
+                    while (true) {
+                        // receiving checksum
+                        DatagramPacket checksumPacket = new DatagramPacket(new byte[1024], 1024);
+                        socket.receive(checksumPacket);
+                        StringBuffer checksum = (StringBuffer) TypeConverter.deserialize(checksumPacket.getData());
+
+                        // receiving frame
+                        receivedData = new byte[PacketSize % (65507)];
+                        socket.receive(new DatagramPacket(receivedData, receivedData.length));
+                        StringBuffer cksFrame = TypeConverter.toHexFormat(receivedData);
+
+                        // detecting errors:
+                        if (checksum.toString().equals(cksFrame.toString())) {
+                            int ack = 1;
+                            // sending ACK
+                            DatagramPacket ackPacket = new DatagramPacket(TypeConverter.serialize(ack), TypeConverter.serialize(ack).length, IPDest, DestPort);
+                            socket.send(ackPacket);
+
+                            // add element to FrameVector
+                            FrameVector.addElement(receivedData);
+                            break;
+                        } else {
+                            int ack = -1;
+                            // sending ACK
+                            DatagramPacket ackPacket = new DatagramPacket(TypeConverter.serialize(ack), TypeConverter.serialize(ack).length, IPDest, DestPort);
+                            socket.send(ackPacket);
+                        }
+                    }
                 }
                 else {
                     // (12) receiving chunk (one chunk have more than 1 frame)
                     for (int i = 0; i < nFrames; i++) {
-                        receivedData = new byte[65507];
-                        socket.receive(new DatagramPacket(receivedData, receivedData.length));
-                        FrameVector.addElement(receivedData);
-                        //System.out.println(this.IPDest + " = " + receivedData.length);
+                        while (true) {
+                            // receiving checksum
+                            DatagramPacket checksumPacket = new DatagramPacket(new byte[1024], 1024);
+                            socket.receive(checksumPacket);
+                            StringBuffer checksum = (StringBuffer) TypeConverter.deserialize(checksumPacket.getData());
+
+                            // receiving frame
+                            receivedData = new byte[65507];
+                            socket.receive(new DatagramPacket(receivedData, receivedData.length));
+                            StringBuffer cksFrame = TypeConverter.toHexFormat(receivedData);
+
+                            // detecting errors:
+                            if (checksum.toString().equals(cksFrame.toString())) {
+                                // sending ACK
+                                int ack = 1;
+                                DatagramPacket ackPacket = new DatagramPacket(TypeConverter.serialize(ack), TypeConverter.serialize(ack).length, IPDest, DestPort);
+                                socket.send(ackPacket);
+                                
+                                // add element to FrameVector
+                                FrameVector.addElement(receivedData);
+                                break;
+                            }
+                            else {
+                                // sending ACK
+                                int ack = -1;
+                                DatagramPacket ackPacket = new DatagramPacket(TypeConverter.serialize(ack), TypeConverter.serialize(ack).length, IPDest, DestPort);
+                                socket.send(ackPacket);
+                            }
+                        }
                     }
                 }
                 double ChunkSize = 0;
