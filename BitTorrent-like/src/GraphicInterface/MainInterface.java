@@ -70,15 +70,9 @@ public class MainInterface extends javax.swing.JFrame implements ActionListener 
     DefaultTableModel tableModelFileList = new DefaultTableModel(columnFileList, 0);
 
     Object[] columnDownloadProcess = {"FileName", "Size"};
-    //Object[][] g = {{"4", "5", "9"}};
-   //DefaultTableModel tableModelDownloadProcess=new DefaultTableModel(g, columnFileList);
-
+    
     Object[] columnInforPeerConnect = {"IP", "Host Name", "Status"};
     DefaultTableModel tableModelInforPeerConnect = new DefaultTableModel(columnInforPeerConnect, 0);
-
-    InetAddress addressIP;
-    String pathChooser = "";
-    Machine m = new Machine();
 
     JPopupMenu fileListPopupMenu = new JPopupMenu();
     JPopupMenu downloadProcessPopupMenu = new JPopupMenu();
@@ -88,16 +82,18 @@ public class MainInterface extends javax.swing.JFrame implements ActionListener 
     JMenuItem miOpenLocation = new JMenuItem("Open Folder");
 
     JMenuItem miDownload = new JMenuItem("Download");
-
-    DatagramSocket socket2 = new DatagramSocket(6060);
+    
+    Machine m = new Machine();
     String Peers[];
+    ThreadJoining Killer = new ThreadJoining(this);
+    
     public List<Chunk> Chunks;
     public Vector<ProcessingThread> receivers = new Vector<>();
     private Vector<ChunkReceiver> chunkReceiver = new Vector<>();
-    ThreadJoining Killer = new ThreadJoining(this);
     public File StaticFileTorrent;
     public Vector<InetAddress> AddrContainingFile = new Vector<>();
-
+    public int[] NoMachineAccessing;
+    
     public MainInterface() throws FileNotFoundException, SocketException, UnknownHostException {
         initComponents();
         initPopupMenu();
@@ -106,7 +102,10 @@ public class MainInterface extends javax.swing.JFrame implements ActionListener 
         setTitle("BitTorrent");
         pgbDownLoad.setStringPainted(true);// hiện %
         pgbDownLoad.setForeground(Color.red);
+        
+        DatagramSocket socket2 = new DatagramSocket(6060);
         ChunkSender sender = new ChunkSender(this, socket2);
+        
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         this.addWindowListener(new WindowAdapter() {
                 public void windowClosing(WindowEvent e) {
@@ -845,6 +844,7 @@ public class MainInterface extends javax.swing.JFrame implements ActionListener 
     private void btnUpFileActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnUpFileActionPerformed
         // TODO add your handling code here:
         new File("BitTorrent").mkdir();
+        String pathChooser = "";
         JFileChooser chooser = new JFileChooser(pathChooser);
 
         chooser.showOpenDialog(null);
@@ -955,7 +955,8 @@ public class MainInterface extends javax.swing.JFrame implements ActionListener 
 
         Chunks = new ArrayList((int) nChunks);
         receivers.removeAllElements();
-
+        NoMachineAccessing = new int[this.AddrContainingFile.size()];
+        
         for (int i = 0; i < nChunks; i++) {
             Chunks.add(null);
         }

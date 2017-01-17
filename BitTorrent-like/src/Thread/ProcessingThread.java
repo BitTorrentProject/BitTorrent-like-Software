@@ -16,6 +16,9 @@ import java.net.DatagramSocket;
 import java.net.SocketException;
 import java.util.Random;
 import java.util.Vector;
+import java.util.concurrent.Semaphore;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  *
@@ -24,38 +27,31 @@ import java.util.Vector;
 public class ProcessingThread extends ChunkReceiver{
     private DataPacket ReceivedPacket;
     private int ChunkID;
-    
+    private static Semaphore[] ReceivingChunkMutex;
     public ProcessingThread(String IPNeighbor, MainInterface Interface, DatagramSocket sock, int LocalPort)
     {
         super(IPNeighbor, Interface, sock, LocalPort);
+        ReceivingChunkMutex = new Semaphore[this.Interface.NoMachineAccessing.length];
+        for (int i = 0; i < ProcessingThread.ReceivingChunkMutex.length; i++) {
+            ReceivingChunkMutex[i] = new Semaphore(1, true);
+        }
     }
     
     public void run(){
+        int MachineIndex = this.BindSocketAndDestAddr();
+        
+        // acquire permit of semaphore
         try {
-            // choosing IP destination to connect
-            this.setIPDest();
-            
-            this.Interface.receivers.addElement(this);
-            
-            // choosing destination port to create socket
-            int port = PortFinder.findFreePort();
-            this.socket = new DatagramSocket(port);
-            this.SrcPort = port;
-            System.out.println(port);
-            this.SetRequest(3);
-            
-            System.out.println(this.IPDest);
-            // starting send-receive data
-            this.ProcessMessage();
-        } catch (SocketException ex) {
-            //Logger.getLogger(ProcessingThread.class.getName()).log(Level.SEVERE, null, ex);
-        } finally {
-            System.out.println("Ending thread");
+            ProcessingThread.ReceivingChunkMutex[MachineIndex].acquire();
+        } catch (InterruptedException ex) {
+            Logger.getLogger(ProcessingThread.class.getName()).log(Level.SEVERE, null, ex);
             this.socket.close();
             this.thread.interrupt();
         }
+        
+        ProcessMessage(MachineIndex);
     }
-     
+    
     public static int randInt(int min, int max) {
 
         // NOTE: This will (intentionally) not run as written so that folks
@@ -73,7 +69,7 @@ public class ProcessingThread extends ChunkReceiver{
         return randomNum;
     }
     
-    private synchronized  void ProcessMessage(){
+    private void ProcessMessage(int MachineIndex){
         try {
             // sending request
             this.SendRequest();
@@ -215,11 +211,14 @@ public class ProcessingThread extends ChunkReceiver{
                 System.out.println("Error");
             }
         } catch (IOException | ClassNotFoundException ex) {
-            //Logger.getLogger(ProcessingThread.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(ProcessingThread.class.getName()).log(Level.SEVERE, null, ex);
             
         }
-        //Logger.getLogger(ProcessingThread.class.getName()).log(Level.SEVERE, null, ex);
-        
+        finally {
+            this.socket.close();
+            this.Interface.NoMachineAccessing[MachineIndex] -= 1;
+            ProcessingThread.ReceivingChunkMutex[MachineIndex].release();
+        }
     }
     
     private void setIPDest() {
@@ -229,5 +228,42 @@ public class ProcessingThread extends ChunkReceiver{
     
     public void setChunkID(int ChunkID) {
         this.ChunkID = ChunkID;
+    }
+    
+    private int BindSocketAndDestAddr() {
+        synchronized(this.Interface.NoMachineAccessing) {
+            int machine = -1;
+            try {
+                // set Ipdest to send request
+                machine = Min(this.Interface.NoMachineAccessing);
+                this.Interface.NoMachineAccessing[machine] += 1;
+                this.IPDest = this.Interface.AddrContainingFile.elementAt(machine);
+                this.Interface.receivers.addElement(this);
+                
+                // create socket and binding port
+                this.SrcPort = PortFinder.findFreePort();
+                this.socket = new DatagramSocket(this.SrcPort);
+                
+                // set request
+                this.SetRequest(3);
+            } catch (SocketException ex) {
+                Logger.getLogger(ProcessingThread.class.getName()).log(Level.SEVERE, null, ex);
+                this.socket.close();
+                this.thread.interrupt();
+            }finally {
+                return machine;
+            }
+        }
+    }
+    private static int Min(int[] arr) {
+        int m = arr[0];
+        int index = 0;
+        for (int i = 0; i < arr.length; i++) {
+            if (arr[i] < m) {
+                m = arr[i];
+                index = i;
+            }
+        }
+        return index;
     }
 }
