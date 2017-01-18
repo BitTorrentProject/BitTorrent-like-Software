@@ -11,6 +11,7 @@ import Converter.TypeConverter;
 import GraphicInterface.MainInterface;
 import Port.PortFinder;
 import java.io.IOException;
+import static java.lang.Math.round;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.SocketException;
@@ -38,12 +39,18 @@ public class ProcessingThread extends ChunkReceiver{
     }
     
     public void run(){
+        // set request
+        this.SetRequest(3);
+                
         int MachineIndex = this.BindSocketAndDestAddr();
         
         // acquire permit of semaphore
         try {
+            // create socket and binding port
+            this.SrcPort = PortFinder.findFreePort();
+            this.socket = new DatagramSocket(this.SrcPort);
             ProcessingThread.ReceivingChunkMutex[MachineIndex].acquire();
-        } catch (InterruptedException ex) {
+        } catch (InterruptedException | SocketException ex) {
             Logger.getLogger(ProcessingThread.class.getName()).log(Level.SEVERE, null, ex);
             this.socket.close();
             this.thread.interrupt();
@@ -204,8 +211,9 @@ public class ProcessingThread extends ChunkReceiver{
                 this.Interface.Chunks.set(ChunkID, new Chunk(this.ChunkID, ChunkSize, ChunkArray, FileName));
                 
                 // updating Process bar
-                double percentage = (double)((PacketSize * 100)/(long)this.Interface.GetTableDownloadProcess().getModel().getValueAt(0, 1));
-                this.Interface.getPgbDownLoad().setValue((int) (this.Interface.getPgbDownLoad().getValue() + percentage));
+                double percentage = ((double)(PacketSize * 100)/(long)this.Interface.GetTableDownloadProcess().getModel().getValueAt(0, 1));
+                long value = round(this.Interface.getPgbDownLoad().getValue() + percentage);
+                this.Interface.getPgbDownLoad().setValue((int)value);
             }
             else {
                 System.out.println("Error");
@@ -233,26 +241,11 @@ public class ProcessingThread extends ChunkReceiver{
     private int BindSocketAndDestAddr() {
         synchronized(this.Interface.NoMachineAccessing) {
             int machine = -1;
-            try {
-                // set Ipdest to send request
-                machine = Min(this.Interface.NoMachineAccessing);
-                this.Interface.NoMachineAccessing[machine] += 1;
-                this.IPDest = this.Interface.AddrContainingFile.elementAt(machine);
-                this.Interface.receivers.addElement(this);
-                
-                // create socket and binding port
-                this.SrcPort = PortFinder.findFreePort();
-                this.socket = new DatagramSocket(this.SrcPort);
-                
-                // set request
-                this.SetRequest(3);
-            } catch (SocketException ex) {
-                Logger.getLogger(ProcessingThread.class.getName()).log(Level.SEVERE, null, ex);
-                this.socket.close();
-                this.thread.interrupt();
-            }finally {
-                return machine;
-            }
+            machine = Min(this.Interface.NoMachineAccessing);
+            this.Interface.NoMachineAccessing[machine] += 1;
+            this.IPDest = this.Interface.AddrContainingFile.elementAt(machine);
+            this.Interface.receivers.addElement(this);
+            return machine;
         }
     }
     private static int Min(int[] arr) {
