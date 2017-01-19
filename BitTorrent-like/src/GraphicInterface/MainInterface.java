@@ -296,7 +296,6 @@ public class MainInterface extends javax.swing.JFrame implements ActionListener 
         try {
             return InetAddress.getLocalHost().getHostAddress();
         } catch (Exception e) {
-            e.printStackTrace();
         }
         return "Valid";
     }
@@ -965,6 +964,7 @@ public class MainInterface extends javax.swing.JFrame implements ActionListener 
         for (int i = 0; i < nChunks; i++) {
             ProcessingThread thread = new ProcessingThread(null, this, null, 0);
             thread.setChunkID(i);
+            receivers.addElement(thread);
             thread.start();
         }
 

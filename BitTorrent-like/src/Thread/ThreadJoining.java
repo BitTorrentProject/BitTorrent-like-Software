@@ -22,7 +22,7 @@ public class ThreadJoining implements Runnable{
     public Thread getThread() {
         return thread;
     }
-    private final Thread thread;
+    private Thread thread;
     private MainInterface Interface;
     public ThreadJoining(MainInterface Interface) {
         thread = new Thread(this);

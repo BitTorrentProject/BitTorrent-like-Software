@@ -244,7 +244,6 @@ public class ProcessingThread extends ChunkReceiver{
             machine = Min(this.Interface.NoMachineAccessing);
             this.Interface.NoMachineAccessing[machine] += 1;
             this.IPDest = this.Interface.AddrContainingFile.elementAt(machine);
-            this.Interface.receivers.addElement(this);
             return machine;
         }
     }
