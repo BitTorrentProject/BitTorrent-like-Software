@@ -26,13 +26,17 @@ import java.util.logging.Logger;
  * @author admin
  */
 public class ProcessingThread extends ChunkReceiver{
-    private DataPacket ReceivedPacket;
     private int ChunkID;
     private static Semaphore[] ReceivingChunkMutex;
+    
     public ProcessingThread(String IPNeighbor, MainInterface Interface, DatagramSocket sock, int LocalPort)
     {
         super(IPNeighbor, Interface, sock, LocalPort);
-        ReceivingChunkMutex = new Semaphore[this.Interface.NoMachineAccessing.length];
+    }
+    
+    public static void setReceivingChunkMutex(int n) {
+        //ReceivingChunkMutex = new Semaphore[this.Interface.NoMachineAccessing.length];
+        ReceivingChunkMutex = new Semaphore[n];
         for (int i = 0; i < ProcessingThread.ReceivingChunkMutex.length; i++) {
             ReceivingChunkMutex[i] = new Semaphore(1, true);
         }
@@ -41,25 +45,40 @@ public class ProcessingThread extends ChunkReceiver{
     public void run(){
         // set request
         this.SetRequest(3);
+        
+        boolean WorkFine = false;
+        
+        while (WorkFine == false) {
+            // find peer to connect to get chunk
+            int PeerIndex = this.FindPeerNumberToConnect();
+
+            // acquire permit of semaphore
+            try {
+                // this means : there are no peers active to download from --> return
+                if (this.Interface.NoMachineAccessing[PeerIndex] == (int) Double.POSITIVE_INFINITY) {
+                    System.out.println("Error tranferring of chunk " + this.ChunkID);
+                    return; // ending thread
+                }
+
+                // create socket and binding port
+                if (this.socket == null || this.socket.isClosed()) {
+                    this.SrcPort = PortFinder.findFreePort();
+                    this.socket = new DatagramSocket(this.SrcPort);
+                }
                 
-        int MachineIndex = this.BindSocketAndDestAddr();
-        
-        // acquire permit of semaphore
-        try {
-            // create socket and binding port
-            this.SrcPort = PortFinder.findFreePort();
-            this.socket = new DatagramSocket(this.SrcPort);
-            ProcessingThread.ReceivingChunkMutex[MachineIndex].acquire();
-        } catch (InterruptedException | SocketException ex) {
-            Logger.getLogger(ProcessingThread.class.getName()).log(Level.SEVERE, null, ex);
-            this.socket.close();
-            this.thread.interrupt();
+                // acquire permit to download
+                ProcessingThread.ReceivingChunkMutex[PeerIndex].acquire();
+            } catch (InterruptedException | SocketException ex) {
+                Logger.getLogger(ProcessingThread.class.getName()).log(Level.SEVERE, null, ex);
+                this.socket.close();
+                this.thread.interrupt(); // ending thread
+            }
+
+            WorkFine = ProcessMessage(PeerIndex);
         }
-        
-        ProcessMessage(MachineIndex);
     }
     
-    public static int randInt(int min, int max) {
+    private static int randInt(int min, int max) {
 
         // NOTE: This will (intentionally) not run as written so that folks
         // copy-pasting have to think about how to initialize their
@@ -76,8 +95,11 @@ public class ProcessingThread extends ChunkReceiver{
         return randomNum;
     }
     
-    private void ProcessMessage(int MachineIndex){
+    private boolean ProcessMessage(int MachineIndex){
         try {
+            byte[] receivedData = new byte[1024];
+            int PacketSize = 0;
+            
             // sending request
             this.SendRequest();
             
@@ -86,13 +108,19 @@ public class ProcessingThread extends ChunkReceiver{
             socket.send(ObectIDPacket);
             
             // (11) receiving Data Packet size (size of byte array in 1 chunk)
-            byte[] receivedData = new byte [1024];
-            socket.receive(new DatagramPacket(receivedData, receivedData.length));
-            int PacketSize = (int)TypeConverter.deserialize(receivedData);
+            try {
+                socket.setSoTimeout(3000);
+                socket.receive(new DatagramPacket(receivedData, receivedData.length));
+                PacketSize = (int) TypeConverter.deserialize(receivedData);
+            } catch (SocketException ex) {
+                // stop current thread to start a new downloader
+                this.ReDownload(MachineIndex);
+                return false;
+            }
             
             // if the file is found at server machine (PacketSize != -1)
             if (PacketSize >= 0) {
-                System.out.println(this.IPDest + " length = " + PacketSize);
+                System.out.println(this.IPDest + ", Chunk " + this.ChunkID + " length = " + PacketSize);
                 // calculating no of frames will be received
                 int nFrames = PacketSize / (65507);
                 if (PacketSize % (65507) != 0)
@@ -100,23 +128,39 @@ public class ProcessingThread extends ChunkReceiver{
                 
                 Vector<byte[]> FrameVector = new Vector<byte[]>();
                 
+                // 
                 if (PacketSize % (65507) != 0) {
-                    // (12) receiving chunk (one chunk have more than 1 frame)
                     for (int i = 0; i < nFrames - 1; i++) {
                         while (true) {
-                            // receiving checksum
-                            DatagramPacket checksumPacket = new DatagramPacket(new byte[1024], 1024);
-                            socket.receive(checksumPacket);
-                            StringBuffer checksum = (StringBuffer) TypeConverter.deserialize(checksumPacket.getData());
-
-                            // receiving frame
-                            receivedData = new byte[65507];
-                            socket.receive(new DatagramPacket(receivedData, receivedData.length));
-                            StringBuffer cksFrame = TypeConverter.toHexFormat(receivedData);
-
+                            StringBuffer checksum = null, cksFrame = null;
+                            
+                            // (12) receiving checksum
+                            try {
+                                socket.setSoTimeout(5000);
+                                DatagramPacket checksumPacket = new DatagramPacket(new byte[1024], 1024);
+                                socket.receive(checksumPacket);
+                                checksum = (StringBuffer) TypeConverter.deserialize(checksumPacket.getData());
+                            } catch (SocketException ex) {
+                                // stop current thread to start a new downloader
+                                this.ReDownload(MachineIndex);
+                                return false;
+                            }
+                            
+                            // (13) receiving frame
+                            try {
+                                receivedData = new byte[65507];
+                                socket.setSoTimeout(5000);
+                                socket.receive(new DatagramPacket(receivedData, receivedData.length));
+                                cksFrame = TypeConverter.toHexFormat(receivedData);
+                            } catch (SocketException ex) {
+                                // stop current thread to start a new downloader
+                                this.ReDownload(MachineIndex);
+                                return false;
+                            }
+                            
                             // detecting errors:
                             if (checksum.toString().equals(cksFrame.toString())) {
-                                // sending ACK
+                                // (14) sending ACK
                                 int ack = 1;
                                 DatagramPacket ackPacket = new DatagramPacket(TypeConverter.serialize(ack), TypeConverter.serialize(ack).length, IPDest, DestPort);
                                 socket.send(ackPacket);
@@ -126,7 +170,7 @@ public class ProcessingThread extends ChunkReceiver{
                                 break;
                             }
                             else {
-                                // sending ACK
+                                // sending ACK : error
                                 int ack = -1;
                                 DatagramPacket ackPacket = new DatagramPacket(TypeConverter.serialize(ack), TypeConverter.serialize(ack).length, IPDest, DestPort);
                                 socket.send(ackPacket);
@@ -134,20 +178,36 @@ public class ProcessingThread extends ChunkReceiver{
                         }
                     }
                     while (true) {
-                        // receiving checksum
-                        DatagramPacket checksumPacket = new DatagramPacket(new byte[1024], 1024);
-                        socket.receive(checksumPacket);
-                        StringBuffer checksum = (StringBuffer) TypeConverter.deserialize(checksumPacket.getData());
+                        StringBuffer checksum = null, cksFrame = null;
 
-                        // receiving frame
-                        receivedData = new byte[PacketSize % (65507)];
-                        socket.receive(new DatagramPacket(receivedData, receivedData.length));
-                        StringBuffer cksFrame = TypeConverter.toHexFormat(receivedData);
-
+                        // (12) receiving checksum
+                        try {
+                            socket.setSoTimeout(5000);
+                            DatagramPacket checksumPacket = new DatagramPacket(new byte[1024], 1024);
+                            socket.receive(checksumPacket);
+                            checksum = (StringBuffer) TypeConverter.deserialize(checksumPacket.getData());
+                        } catch (SocketException ex) {
+                            // stop current thread to start a new downloader
+                            this.ReDownload(MachineIndex);
+                            return false;
+                        }
+                        
+                        // (13) receiving frame
+                        try {
+                            socket.setSoTimeout(5000);
+                            receivedData = new byte[PacketSize % (65507)];
+                            socket.receive(new DatagramPacket(receivedData, receivedData.length));
+                            cksFrame = TypeConverter.toHexFormat(receivedData);
+                        } catch (SocketException ex) {
+                            // stop current thread to start a new downloader
+                            this.ReDownload(MachineIndex);
+                            return false;
+                        }
+                        
                         // detecting errors:
                         if (checksum.toString().equals(cksFrame.toString())) {
                             int ack = 1;
-                            // sending ACK
+                            // (14) sending ACK
                             DatagramPacket ackPacket = new DatagramPacket(TypeConverter.serialize(ack), TypeConverter.serialize(ack).length, IPDest, DestPort);
                             socket.send(ackPacket);
 
@@ -156,29 +216,45 @@ public class ProcessingThread extends ChunkReceiver{
                             break;
                         } else {
                             int ack = -1;
-                            // sending ACK
+                            
+                            // (14) sending ACK : error
                             DatagramPacket ackPacket = new DatagramPacket(TypeConverter.serialize(ack), TypeConverter.serialize(ack).length, IPDest, DestPort);
                             socket.send(ackPacket);
                         }
                     }
                 }
                 else {
-                    // (12) receiving chunk (one chunk have more than 1 frame)
                     for (int i = 0; i < nFrames; i++) {
                         while (true) {
-                            // receiving checksum
-                            DatagramPacket checksumPacket = new DatagramPacket(new byte[1024], 1024);
-                            socket.receive(checksumPacket);
-                            StringBuffer checksum = (StringBuffer) TypeConverter.deserialize(checksumPacket.getData());
-
-                            // receiving frame
-                            receivedData = new byte[65507];
-                            socket.receive(new DatagramPacket(receivedData, receivedData.length));
-                            StringBuffer cksFrame = TypeConverter.toHexFormat(receivedData);
-
+                            StringBuffer checksum = null, cksFrame = null;
+                            
+                            // (12) receiving checksum
+                            try {
+                                socket.setSoTimeout(5000);
+                                DatagramPacket checksumPacket = new DatagramPacket(new byte[1024], 1024);
+                                socket.receive(checksumPacket);
+                                checksum = (StringBuffer) TypeConverter.deserialize(checksumPacket.getData());
+                            } catch (SocketException ex) {
+                                // stop current thread to start a new downloader
+                                this.ReDownload(MachineIndex);
+                                return false;
+                            }
+                            
+                            // (13) receiving frame
+                            try {
+                                receivedData = new byte[65507];
+                                socket.setSoTimeout(5000);
+                                socket.receive(new DatagramPacket(receivedData, receivedData.length));
+                                cksFrame = TypeConverter.toHexFormat(receivedData);
+                            } catch (SocketException ex) {
+                                // stop current thread to start a new downloader
+                                this.ReDownload(MachineIndex);
+                                return false;
+                            }
+                            
                             // detecting errors:
                             if (checksum.toString().equals(cksFrame.toString())) {
-                                // sending ACK
+                                // (14) sending ACK
                                 int ack = 1;
                                 DatagramPacket ackPacket = new DatagramPacket(TypeConverter.serialize(ack), TypeConverter.serialize(ack).length, IPDest, DestPort);
                                 socket.send(ackPacket);
@@ -188,7 +264,7 @@ public class ProcessingThread extends ChunkReceiver{
                                 break;
                             }
                             else {
-                                // sending ACK
+                                // (14) sending ACK : error
                                 int ack = -1;
                                 DatagramPacket ackPacket = new DatagramPacket(TypeConverter.serialize(ack), TypeConverter.serialize(ack).length, IPDest, DestPort);
                                 socket.send(ackPacket);
@@ -204,7 +280,7 @@ public class ProcessingThread extends ChunkReceiver{
                     ChunkSize = ((double)(PacketSize)/ (1024 * 1024)) - (int)(PacketSize / (1024 * 1024));
                 
                 byte[] ChunkArray = DataPartition.Assemble(FrameVector,65507);
-                System.out.println(" ******* " + ChunkArray.length);
+                System.out.println(this.IPDest.toString() + " ******* " + this.ChunkID + " ******* " + ChunkArray.length);
                 String FileName = (String)this.Interface.GetTableDownloadProcess().getModel().getValueAt(0, 0);
                 
                 //set chunk
@@ -218,14 +294,16 @@ public class ProcessingThread extends ChunkReceiver{
             else {
                 System.out.println("Error");
             }
-        } catch (IOException | ClassNotFoundException ex) {
+        } catch (ClassNotFoundException ex) {
             Logger.getLogger(ProcessingThread.class.getName()).log(Level.SEVERE, null, ex);
-            
         }
         finally {
             this.socket.close();
             this.Interface.NoMachineAccessing[MachineIndex] -= 1;
+
+            // releasing mutex
             ProcessingThread.ReceivingChunkMutex[MachineIndex].release();
+            return true;
         }
     }
     
@@ -238,9 +316,9 @@ public class ProcessingThread extends ChunkReceiver{
         this.ChunkID = ChunkID;
     }
     
-    private int BindSocketAndDestAddr() {
+    private int FindPeerNumberToConnect() {
+        int machine = -1;
         synchronized(this.Interface.NoMachineAccessing) {
-            int machine = -1;
             machine = Min(this.Interface.NoMachineAccessing);
             this.Interface.NoMachineAccessing[machine] += 1;
             this.IPDest = this.Interface.AddrContainingFile.elementAt(machine);
@@ -257,5 +335,20 @@ public class ProcessingThread extends ChunkReceiver{
             }
         }
         return index;
+    }
+    
+    /**
+     *
+     * @param MachineIndex the value of MachineIndex
+     */
+    private void ReDownload(int MachineIndex){
+        //  IF AN ERROR EXISTS WHILE THANSFERRING
+        System.out.println("Error tranferring of chunk " + this.ChunkID);
+        
+        // set this peer to Infinity : It's not possible to download from peer MachineIndex
+        this.Interface.NoMachineAccessing[MachineIndex] = (int) Double.POSITIVE_INFINITY;
+
+        // releasing mutex
+        ProcessingThread.ReceivingChunkMutex[MachineIndex].release();
     }
 }

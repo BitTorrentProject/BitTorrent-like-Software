@@ -17,6 +17,7 @@ import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
+import java.net.SocketException;
 import java.net.SocketTimeoutException;
 import java.util.Arrays;
 import java.util.Vector;
@@ -36,12 +37,12 @@ public class ChunkSender implements Runnable{
     public Thread getThread() {
         return thread;
     }
+    
     private DatagramSocket socket;
     private int DestPort;
     private MainInterface Interface;
     private Thread thread;
-    private DataPacket SentPacket;
-    
+
     public ChunkSender(MainInterface Interface, DatagramSocket sock) {
         thread = new Thread(this);
         this.Interface = Interface;
@@ -51,11 +52,11 @@ public class ChunkSender implements Runnable{
     @Override
     public void run() {
         while (true) {
-            try {  
+            try {
                 // (0) get message from a machine
                 DatagramPacket RequestPacket = new DatagramPacket(new byte[1024], 1024);
                 socket.receive(RequestPacket);
-                
+              
                 int message = (int) TypeConverter.deserialize(RequestPacket.getData());
                 
                 // a machine wants to search a file in your machine (message = 1)
@@ -126,7 +127,7 @@ public class ChunkSender implements Runnable{
                         String str[] = FileName.split(".torrent");
                         UploadingFile file = this.SearchFile(str[0]);
                         
-                        if (this.CompareByteArray(Torrent, TorrentPacket.getData()) && file != null) {
+                        if (ChunkSender.CompareByteArray(Torrent, TorrentPacket.getData()) && file != null) {
                             // (7) sending the size of file you want to download          
                             socket.send(new DatagramPacket(TypeConverter.serialize(file.getLocalFile().length()), TypeConverter.serialize(file.getLocalFile().length()).length, (InetAddress) TypeConverter.deserialize(IpSrcPacket.getData()), DestPort));
 
@@ -177,33 +178,34 @@ public class ChunkSender implements Runnable{
                         System.out.println("l = " + length);
                         DatagramPacket SizePacket = new DatagramPacket(TypeConverter.serialize(length), TypeConverter.serialize(length).length, (InetAddress) TypeConverter.deserialize(IpSrcPacket.getData()), this.DestPort);
                         socket.send(SizePacket);
-                        
-                        // (12) sending chunk
+                    
                         // devide datapacket into frames and send it
                         Vector<byte[]> Frames = DataPartition.SeparateObjectByteArray(FoundFile.getChunks().get(ObjID).getData(), 65507);
                         for (byte[] Frame : Frames) {
                             int ack = -1;
                             
-                            // if ack == 2 : error, the data sent is not received intactly from client -> resend 
+                            // if ack == -1 : error, the data sent is not received intactly from client -> resend 
                             while (ack == -1) {
                                 StringBuffer checksum = TypeConverter.toHexFormat(Frame);
                                 DatagramPacket checksumPacket = new DatagramPacket(TypeConverter.serialize(checksum), TypeConverter.serialize(checksum).length, (InetAddress) TypeConverter.deserialize(IpSrcPacket.getData()), this.DestPort);
-                                // sending checksum
+                                // (12) sending checksum
                                 socket.send(checksumPacket);
-
-                                // sending frame
+                                
+                                Thread.sleep(1000);
+                                
+                                // (13) sending frame
                                 DatagramPacket FramePacket = new DatagramPacket(Frame, Frame.length, (InetAddress) TypeConverter.deserialize(IpSrcPacket.getData()), this.DestPort);
                                 socket.send(FramePacket);
                                 
-                                socket.setSoTimeout(5000);
-                                
                                 try {
-                                    // receiving ACK
+                                    //socket.setSoTimeout(5000);
+                                    
+                                    // (14) receiving ACK
                                     DatagramPacket ACKPacket = new DatagramPacket(new byte[1024], 1024);
                                     socket.receive(ACKPacket);
 
                                     ack = (int) TypeConverter.deserialize(ACKPacket.getData());
-                                } catch (SocketTimeoutException e) {
+                                } catch (SocketException e) {
                                     System.out.println((InetAddress) TypeConverter.deserialize(IpSrcPacket.getData()) + "********");
                                     continue;
                                 }
@@ -216,14 +218,10 @@ public class ChunkSender implements Runnable{
                         socket.send(new DatagramPacket(TypeConverter.serialize(FNFMessage), TypeConverter.serialize(FNFMessage).length, (InetAddress) TypeConverter.deserialize(IpSrcPacket.getData()), this.DestPort));
                     }
                 }
-            } catch (IOException ex) {
-                //Logger.getLogger(ChunkSender.class.getName()).log(Level.SEVERE, null, ex);
-                socket.close();
-                this.thread.interrupt();
-            } catch (ClassNotFoundException ex) {
+            } catch (IOException | ClassNotFoundException | InterruptedException ex) {
                 Logger.getLogger(ChunkSender.class.getName()).log(Level.SEVERE, null, ex);
                 socket.close();
-                this.thread.interrupt();
+                return;
             }
         }
     }

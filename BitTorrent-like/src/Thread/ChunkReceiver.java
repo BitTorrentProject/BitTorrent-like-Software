@@ -12,6 +12,8 @@ import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
+import java.net.SocketException;
+import java.net.SocketTimeoutException;
 import java.net.UnknownHostException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -63,15 +65,17 @@ public class ChunkReceiver implements Runnable{
             
             // (4) other machine reply and we catch the message
             DatagramPacket DataPacket = new DatagramPacket(ReceivedData, ReceivedData.length);
+            socket.setSoTimeout(2000);
             socket.receive(DataPacket);
             
-            synchronized(this.Interface) {
-                // convert data in received packet to int
-                int receivedMessage = (int) TypeConverter.deserialize(DataPacket.getData());
-                
+            // convert data in received packet to int
+            int receivedMessage = (int) TypeConverter.deserialize(DataPacket.getData());
+            
+            synchronized(this.Interface) {    
                 // the replied message is 1 : searching files
                 if (receivedMessage == 1) {
                     // (5) receiving packet size of vector of byte arrays
+                    socket.setSoTimeout(2000);
                     socket.receive(DataPacket);
                     long FileLength = (long)TypeConverter.deserialize(DataPacket.getData());
                     
@@ -79,6 +83,7 @@ public class ChunkReceiver implements Runnable{
                     if (FileLength >= 0) {
                         // (6) receiving result from server : the file name to search, and the size
                         // so we have found the file in system
+                        socket.setSoTimeout(2000);
                         socket.receive(DataPacket);
                         String fileName = (String)TypeConverter.deserialize(DataPacket.getData());
                         
@@ -95,6 +100,7 @@ public class ChunkReceiver implements Runnable{
                 // the replied message is 2 : sending torrent content of the file you want to download
                 else if (receivedMessage == 2) {
                     // (7) receiving message informing if that machine has the file you want to download
+                    socket.setSoTimeout(2000);
                     socket.receive(DataPacket);
                     long message = (long)TypeConverter.deserialize(DataPacket.getData());
                     
@@ -103,11 +109,13 @@ public class ChunkReceiver implements Runnable{
                     // if the file you want to download is detected in that machine
                     if (message >= 0) {
                         // (8) receiving the packet containing IP of that machine
+                        socket.setSoTimeout(2000);
                         socket.receive(DataPacket);
                         InetAddress IPdest = (InetAddress)TypeConverter.deserialize(DataPacket.getData());
                         this.Interface.AddrContainingFile.addElement(IPdest);
                         
                         // (9) receiving the name of file you want to download again.
+                        socket.setSoTimeout(2000);
                         socket.receive(DataPacket);
                         String fileName = (String)TypeConverter.deserialize(DataPacket.getData());
                         
@@ -125,15 +133,15 @@ public class ChunkReceiver implements Runnable{
                         System.out.println("Error");
                     }
                 }
-                else if (receivedMessage == 3) {
+                else{
                     
                 }
             }
-        } catch (IOException ex) {
-            //Logger.getLogger(ChunkReceiver.class.getName()).log(Level.SEVERE, null, ex);
-        } catch (ClassNotFoundException ex) {
-            //Logger.getLogger(ChunkReceiver.class.getName()).log(Level.SEVERE, null, ex);
-        } finally {
+        } catch (IOException  | ClassNotFoundException ex) {
+            System.out.println("There is an error connection : the message can not be tranfered !");
+        }
+        //Logger.getLogger(ChunkReceiver.class.getName()).log(Level.SEVERE, null, ex);
+         finally {
             System.out.println("Ending thread");
             this.socket.close();
             this.thread.interrupt();

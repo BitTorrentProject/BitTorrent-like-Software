@@ -85,11 +85,11 @@ public class MainInterface extends javax.swing.JFrame implements ActionListener 
     
     Machine m = new Machine();
     String Peers[];
-    ThreadJoining Killer = new ThreadJoining(this);
     
+    public ThreadJoining Killer = new ThreadJoining(this);
     public List<Chunk> Chunks;
     public Vector<ProcessingThread> receivers = new Vector<>();
-    private Vector<ChunkReceiver> chunkReceiver = new Vector<>();
+    public Vector<ChunkReceiver> chunkReceiver = new Vector<>();
     public File StaticFileTorrent;
     public Vector<InetAddress> AddrContainingFile = new Vector<>();
     public int[] NoMachineAccessing;
@@ -103,45 +103,48 @@ public class MainInterface extends javax.swing.JFrame implements ActionListener 
         pgbDownLoad.setStringPainted(true);// hiện %
         pgbDownLoad.setForeground(Color.red);
         
+        // creating result sender
         DatagramSocket socket2 = new DatagramSocket(6060);
         ChunkSender sender = new ChunkSender(this, socket2);
-        
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+        
+        // Creating event closing for window
         this.addWindowListener(new WindowAdapter() {
-                public void windowClosing(WindowEvent e) {
-                    int hoi = JOptionPane.showConfirmDialog(null, "Are you sure want to quit ?",
-                            "Warns", JOptionPane.YES_NO_OPTION);
-                    if (hoi == JOptionPane.YES_OPTION) {
-                        sender.getSocket().close();
-                        sender.getThread().interrupt();
-                        
-                        // to force all ChunkReceiver to terminate
-                        // close ChunkReceiver socket
-                        for (ChunkReceiver r : chunkReceiver)
-                        {
-                            try {
-                                r.getSocket().close();
-                                r.getThread().join();
-                            } catch (InterruptedException ex) {
-                                Logger.getLogger(MainInterface.class.getName()).log(Level.SEVERE, null, ex);
-                            }
-                        }
-                        
-                        // waiting to finish downloading
-                        try {
-                            Killer.getThread().join();
-                        } catch (InterruptedException ex) {
-                            Logger.getLogger(MainInterface.class.getName()).log(Level.SEVERE, null, ex);
-                        }
-                        
-                        // close all socket in ProcessingThread
-                        for (ProcessingThread r : receivers)
-                            r.getSocket().close();
-                        System.exit(0);
-                        dispose();
+            @Override
+            public void windowClosing(WindowEvent e) {
+                //int mssg = JOptionPane.showConfirmDialog(null, "Are you sure want to quit ?", "Warns", JOptionPane.YES_NO_OPTION);
+                
+                // kill sender
+                sender.getSocket().close();
+                sender.getThread().interrupt();
+                
+                // to force all ChunkReceiver to terminate
+                // close ChunkReceiver socket
+                chunkReceiver.stream().forEach((r) -> {
+                    try {
+                        r.getSocket().close();
+                        r.getThread().join();
+                    } catch (InterruptedException ex) {
+                        Logger.getLogger(MainInterface.class.getName()).log(Level.SEVERE, null, ex);
                     }
+                });
+
+                // waiting to finish downloading
+                try {
+                    Killer.getThread().join();
+                } catch (InterruptedException ex) {
+                    Logger.getLogger(MainInterface.class.getName()).log(Level.SEVERE, null, ex);
                 }
-            });
+
+                // close all socket in ProcessingThread
+                receivers.stream().forEach((r) -> {
+                    r.getSocket().close();
+                });
+
+                System.exit(0);
+                dispose();
+            }
+        });
         
         tfSearch.getParent().requestFocus();
         lYourIP.setText("Your IP: " + getYourIP());
@@ -155,12 +158,8 @@ public class MainInterface extends javax.swing.JFrame implements ActionListener 
         //tableDownloadProcess.setModel(tableModelDownloadProcess);
         tableInforPeerConnect.setModel(tableModelInforPeerConnect);
         tableFileList.setModel(tableModelFileList);
-
-       //tableFileList.setEnabled(true);
-        //tableModelFileList.
-       //jLabel2.setIcon(new ImageIcon(new ImageIcon("src/Image/rsz_upfile.png").getImage().getScaledInstance(40, 40, Image.SCALE_DEFAULT)));
-        //btnUpFile.setIcon(new ImageIcon(new ImageIcon("src/Image/rsz_upfile.png").getImage().getScaledInstance(100, 100, Image.SCALE_DEFAULT)));
-        // btnDeleteFile.setIcon(new ImageIcon(new ImageIcon("src/Image/rsz_remove.png").getImage().getScaledInstance(100, 100, Image.SCALE_DEFAULT)));
+        
+        // set peers
         Peers = ReadInfoEachMachine();
         DefaultTableModel model = (DefaultTableModel) this.tableInforPeerConnect.getModel();
         for (int i = 0; i < Peers.length; i++) {
@@ -168,7 +167,7 @@ public class MainInterface extends javax.swing.JFrame implements ActionListener 
             InetAddress IPDest = InetAddress.getByName(Peers[i]);
         }
 
-        
+        // start sender
         sender.start();
     }
 
@@ -951,10 +950,11 @@ public class MainInterface extends javax.swing.JFrame implements ActionListener 
         if ((long) this.tableDownloadProcess.getModel().getValueAt(0, 1) % (1024 * 1024) != 0) {
             nChunks += 1;
         }
-
+        
         Chunks = new ArrayList((int) nChunks);
         receivers.removeAllElements();
         NoMachineAccessing = new int[this.AddrContainingFile.size()];
+        ProcessingThread.setReceivingChunkMutex(NoMachineAccessing.length);
         
         for (int i = 0; i < nChunks; i++) {
             Chunks.add(null);

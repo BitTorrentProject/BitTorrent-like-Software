@@ -11,6 +11,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.swing.JOptionPane;
 import javax.swing.table.DefaultTableModel;
 
 /**
@@ -48,9 +49,10 @@ public class ThreadJoining implements Runnable{
             DefaultTableModel model = (DefaultTableModel) this.Interface.getTableFileList().getModel();
             model.addRow(new Object[]{DownloadedFile.getLocalFile().getName(), MainInterface.RoundFileSize(DownloadedFile.getLocalFile().length()), "available"});
             this.Interface.getTableFileList().setModel(model);
+            
+            JOptionPane.showMessageDialog(null, DownloadedFile.getLocalFile().getName() + " download completely", "Message", JOptionPane.OK_OPTION);
         } catch (InterruptedException | IOException ex) {
             Logger.getLogger(ThreadJoining.class.getName()).log(Level.SEVERE, null, ex);
-
         }
         finally {
             this.thread.interrupt();
