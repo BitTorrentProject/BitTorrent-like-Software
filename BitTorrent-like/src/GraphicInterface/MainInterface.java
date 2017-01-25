@@ -103,29 +103,42 @@ public class MainInterface extends javax.swing.JFrame implements ActionListener 
         pgbDownLoad.setStringPainted(true);// hiện %
         pgbDownLoad.setForeground(Color.red);
         
+        // creating result sender
         DatagramSocket socket2 = new DatagramSocket(6060);
         ChunkSender sender = new ChunkSender(this, socket2);
-        
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+        
+        // Creating event closing for window
         this.addWindowListener(new WindowAdapter() {
+                @Override
                 public void windowClosing(WindowEvent e) {
-                    int hoi = JOptionPane.showConfirmDialog(null, "Are you sure want to quit ?",
-                            "Warns", JOptionPane.YES_NO_OPTION);
-                    if (hoi == JOptionPane.YES_OPTION) {
-                        sender.getSocket().close();
-                        sender.getThread().interrupt();
+                    int mssg = JOptionPane.showConfirmDialog(null, "Are you sure want to quit ?", "Warns", JOptionPane.YES_NO_OPTION);
+                    
+                    if (mssg == JOptionPane.YES_OPTION) {
+                        // if sender is working
+                        if (sender.IsWorking()) {
+                            try {
+                                sender.getThread().join();
+                                sender.getSocket().close();
+                            } catch (InterruptedException ex) {
+                                Logger.getLogger(MainInterface.class.getName()).log(Level.SEVERE, null, ex);
+                            }
+                        }
+                        else {
+                            sender.getSocket().close();
+                            sender.getThread().interrupt();
+                        }
                         
                         // to force all ChunkReceiver to terminate
                         // close ChunkReceiver socket
-                        for (ChunkReceiver r : chunkReceiver)
-                        {
+                        chunkReceiver.stream().forEach((r) -> {
                             try {
                                 r.getSocket().close();
                                 r.getThread().join();
                             } catch (InterruptedException ex) {
                                 Logger.getLogger(MainInterface.class.getName()).log(Level.SEVERE, null, ex);
                             }
-                        }
+                        });
                         
                         // waiting to finish downloading
                         try {
@@ -135,8 +148,9 @@ public class MainInterface extends javax.swing.JFrame implements ActionListener 
                         }
                         
                         // close all socket in ProcessingThread
-                        for (ProcessingThread r : receivers)
+                        receivers.stream().forEach((r) -> {
                             r.getSocket().close();
+                        });
                         System.exit(0);
                         dispose();
                     }

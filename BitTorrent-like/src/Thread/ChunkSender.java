@@ -36,25 +36,35 @@ public class ChunkSender implements Runnable{
     public Thread getThread() {
         return thread;
     }
+    
+    public boolean IsWorking() {
+        return IsWorking;
+    }
+    
     private DatagramSocket socket;
     private int DestPort;
     private MainInterface Interface;
     private Thread thread;
-    private DataPacket SentPacket;
+    private boolean IsWorking;
+
+    
     
     public ChunkSender(MainInterface Interface, DatagramSocket sock) {
         thread = new Thread(this);
         this.Interface = Interface;
         socket = sock;
+        IsWorking = false;
     }
     
     @Override
     public void run() {
         while (true) {
-            try {  
+            try {
                 // (0) get message from a machine
                 DatagramPacket RequestPacket = new DatagramPacket(new byte[1024], 1024);
                 socket.receive(RequestPacket);
+                
+                IsWorking = true;
                 
                 int message = (int) TypeConverter.deserialize(RequestPacket.getData());
                 
@@ -177,28 +187,27 @@ public class ChunkSender implements Runnable{
                         System.out.println("l = " + length);
                         DatagramPacket SizePacket = new DatagramPacket(TypeConverter.serialize(length), TypeConverter.serialize(length).length, (InetAddress) TypeConverter.deserialize(IpSrcPacket.getData()), this.DestPort);
                         socket.send(SizePacket);
-                        
-                        // (12) sending chunk
+                    
                         // devide datapacket into frames and send it
                         Vector<byte[]> Frames = DataPartition.SeparateObjectByteArray(FoundFile.getChunks().get(ObjID).getData(), 65507);
                         for (byte[] Frame : Frames) {
                             int ack = -1;
                             
-                            // if ack == 2 : error, the data sent is not received intactly from client -> resend 
+                            // if ack == -1 : error, the data sent is not received intactly from client -> resend 
                             while (ack == -1) {
                                 StringBuffer checksum = TypeConverter.toHexFormat(Frame);
                                 DatagramPacket checksumPacket = new DatagramPacket(TypeConverter.serialize(checksum), TypeConverter.serialize(checksum).length, (InetAddress) TypeConverter.deserialize(IpSrcPacket.getData()), this.DestPort);
-                                // sending checksum
+                                // (12) sending checksum
                                 socket.send(checksumPacket);
 
-                                // sending frame
+                                // (13) sending frame
                                 DatagramPacket FramePacket = new DatagramPacket(Frame, Frame.length, (InetAddress) TypeConverter.deserialize(IpSrcPacket.getData()), this.DestPort);
                                 socket.send(FramePacket);
                                 
                                 socket.setSoTimeout(5000);
                                 
                                 try {
-                                    // receiving ACK
+                                    // (14) receiving ACK
                                     DatagramPacket ACKPacket = new DatagramPacket(new byte[1024], 1024);
                                     socket.receive(ACKPacket);
 
@@ -216,15 +225,14 @@ public class ChunkSender implements Runnable{
                         socket.send(new DatagramPacket(TypeConverter.serialize(FNFMessage), TypeConverter.serialize(FNFMessage).length, (InetAddress) TypeConverter.deserialize(IpSrcPacket.getData()), this.DestPort));
                     }
                 }
-            } catch (IOException ex) {
-                //Logger.getLogger(ChunkSender.class.getName()).log(Level.SEVERE, null, ex);
-                socket.close();
-                this.thread.interrupt();
-            } catch (ClassNotFoundException ex) {
+            } catch (IOException | ClassNotFoundException ex) {
                 Logger.getLogger(ChunkSender.class.getName()).log(Level.SEVERE, null, ex);
                 socket.close();
+                IsWorking = false;
                 this.thread.interrupt();
             }
+            
+            IsWorking = false;
         }
     }
     
