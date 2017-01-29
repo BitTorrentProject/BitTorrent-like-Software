@@ -97,6 +97,7 @@ public class Sender extends Thread{
             
             s1.join();
             s2.join();
+            ///////////
         }
     }
 }
