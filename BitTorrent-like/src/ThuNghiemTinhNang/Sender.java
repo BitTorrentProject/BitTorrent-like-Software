@@ -5,7 +5,6 @@
  */
 package ThuNghiemTinhNang;
 
-import Converter.DataPartition;
 import Converter.TypeConverter;
 import Port.PortFinder;
 import java.io.IOException;
