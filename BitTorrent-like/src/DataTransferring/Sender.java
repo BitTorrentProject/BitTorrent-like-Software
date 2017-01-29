@@ -5,10 +5,8 @@
  */
 package DataTransferring;
 
-import Converter.DataPartition;
 import Converter.TypeConverter;
 import Port.PortFinder;
-import Thread.DataPacket;
 import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
