@@ -10,7 +10,6 @@ import Converter.DataPartition;
 import Converter.TypeConverter;
 import GraphicInterface.MainInterface;
 import Port.PortFinder;
-import java.io.IOException;
 import static java.lang.Math.round;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;

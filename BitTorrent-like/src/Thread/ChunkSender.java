@@ -18,7 +18,6 @@ import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.SocketException;
-import java.net.SocketTimeoutException;
 import java.util.Arrays;
 import java.util.Vector;
 import java.util.logging.Level;
@@ -47,7 +46,6 @@ public class ChunkSender implements Runnable{
         thread = new Thread(this);
         this.Interface = Interface;
         socket = sock;
-        IsWorking = false;
     }
     
     @Override
@@ -224,8 +222,6 @@ public class ChunkSender implements Runnable{
                 socket.close();
                 return;
             }
-            
-            IsWorking = false;
         }
     }
     
