@@ -74,5 +74,6 @@ public class DataPacket {
 
     public void setDataLength(int DataLength) {
         this.DataLength = DataLength;
+        int i = 3;
     }
 }
