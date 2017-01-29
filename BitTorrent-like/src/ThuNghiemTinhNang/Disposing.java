@@ -47,9 +47,6 @@ public class Disposing {
         t = new Thread(Thread2);
         t.start();
         t.interrupt();
-        
-        
         t.join();
-       
     }
 }
