@@ -47,6 +47,7 @@ public class ChunkSender implements Runnable{
         thread = new Thread(this);
         this.Interface = Interface;
         socket = sock;
+        IsWorking = false;
     }
     
     @Override
@@ -223,6 +224,8 @@ public class ChunkSender implements Runnable{
                 socket.close();
                 return;
             }
+            
+            IsWorking = false;
         }
     }
     
