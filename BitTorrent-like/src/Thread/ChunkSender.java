@@ -218,7 +218,7 @@ public class ChunkSender implements Runnable{
                     }
                 }
             } catch (IOException | ClassNotFoundException | InterruptedException ex) {
-                Logger.getLogger(ChunkSender.class.getName()).log(Level.SEVERE, null, ex);
+                //Logger.getLogger(ChunkSender.class.getName()).log(Level.SEVERE, null, ex);
                 socket.close();
                 return;
             }
