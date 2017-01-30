@@ -21,11 +21,11 @@ import java.util.logging.Logger;
  *
  * @author admin
  */
-public class Sender extends Thread{
+public class Receiver extends Thread{
     DatagramSocket socket;
     int port;
     InetAddress Dest;
-    public Sender(int port, String IP) throws SocketException, UnknownHostException {
+    public Receiver(int port, String IP) throws SocketException, UnknownHostException {
         socket = new DatagramSocket(port);
         this.port = port;
         this.Dest = InetAddress.getByName(IP);
@@ -75,22 +75,20 @@ public class Sender extends Thread{
             
             System.out.println("-------------------------END PROGRAM-------------------");
         } catch (SocketException ex) {
-            Logger.getLogger(Sender.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(Receiver.class.getName()).log(Level.SEVERE, null, ex);
         } catch (IOException ex) {
-            Logger.getLogger(Sender.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(Receiver.class.getName()).log(Level.SEVERE, null, ex);
         } catch (ClassNotFoundException ex) {
-            Logger.getLogger(Sender.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(Receiver.class.getName()).log(Level.SEVERE, null, ex);
         }
         finally {
             socket.close();
         }
     }
     public static void main(String args[]) throws SocketException, UnknownHostException, InterruptedException {
-        
-        
         for (int i = 0; i < 2; i++) {
-            Sender s1 = new Sender(PortFinder.findFreePort(), "192.168.1.1");
-            Sender s2 = new Sender(PortFinder.findFreePort(), "192.168.1.3");
+            Receiver s1 = new Receiver(PortFinder.findFreePort(), "192.168.1.1");
+            Receiver s2 = new Receiver(PortFinder.findFreePort(), "192.168.1.3");
             
             s1.start();
             s2.start();
