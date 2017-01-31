@@ -162,9 +162,9 @@ public class MainInterface extends javax.swing.JFrame implements ActionListener 
         // set peers
         Peers = ReadInfoEachMachine();
         DefaultTableModel model = (DefaultTableModel) this.tableInforPeerConnect.getModel();
-        for (int i = 0; i < Peers.length; i++) {
-            model.addRow(new Object[]{Peers[i], "", "Active"});
-            InetAddress IPDest = InetAddress.getByName(Peers[i]);
+        for (String Peer : Peers) {
+            model.addRow(new Object[]{Peer, "", "Active"});
+            InetAddress IPDest = InetAddress.getByName(Peer);
         }
 
         // start sender
@@ -1021,17 +1021,13 @@ public class MainInterface extends javax.swing.JFrame implements ActionListener 
 
         /* Create and display the form */
         java.awt.EventQueue.invokeLater(new Runnable() {
+
             public void run() {
                 try {
                     new MainInterface().setVisible(true);
-                } catch (FileNotFoundException ex) {
-                    Logger.getLogger(MainInterface.class.getName()).log(Level.SEVERE, null, ex);
-                } catch (SocketException ex) {
-                    Logger.getLogger(MainInterface.class.getName()).log(Level.SEVERE, null, ex);
-                } catch (UnknownHostException ex) {
+                } catch (FileNotFoundException | SocketException | UnknownHostException ex) {
                     Logger.getLogger(MainInterface.class.getName()).log(Level.SEVERE, null, ex);
                 }
-
             }
         });
     }
